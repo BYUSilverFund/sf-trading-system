@@ -68,4 +68,3 @@ uv remove <package>
 ```bash
 pre-commit run --all-files
 ```
-
