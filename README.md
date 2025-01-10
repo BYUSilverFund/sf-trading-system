@@ -39,8 +39,8 @@ code ~/.zshrc
 
 Add this line to the bottom:
 ```bash
-# Custom python path for sf_trading_system project
-export PYTHONPATH=/path/to/project/sf_trading_system/:$PYTHONPATH
+# Custom python path for sf-trading-system project
+export PYTHONPATH=/path/to/project/sf-trading-system/:$PYTHONPATH
 ```
 
 Make sure to kill all running terminals and reopen for the environment to reset.

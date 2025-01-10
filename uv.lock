@@ -745,7 +745,7 @@ wheels = [
 ]
 
 [[package]]
-name = "sf_trading_system"
+name = "sf-trading-system"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
