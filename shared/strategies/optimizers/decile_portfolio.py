@@ -19,7 +19,7 @@ def decile_portfolio(chunk: pl.DataFrame, signal: str, weighting: str = "equal")
 
     # Seperate portfolios
     portfolios = [
-        binned_chunk.filter(pl.col("bin") == i).select(["date", "ticker", signal, "bin"])
+        binned_chunk.filter(pl.col("bin") == i).select(["date", "permno", signal, "bin"])
         for i in range(10)
     ]
 

@@ -2,9 +2,9 @@ from datetime import date
 
 import gdown
 import polars as pl
-from dataset import Dataset
 
 from shared.database import Database
+from shared.datasets.dataset import Dataset
 
 
 class CRSPMonthly(Dataset):
@@ -102,7 +102,10 @@ class CRSPMonthly(Dataset):
         self.db.create(self.core_table_name, df, overwrite=True)
 
     def load(self):
-        return self.db.read(self.core_table_name)
+        data = self.db.read(self.core_table_name).filter(
+            (pl.col("date") >= self.start_date) & (pl.col("date") <= self.end_date)
+        )
+        return data
 
 
 if __name__ == "__main__":

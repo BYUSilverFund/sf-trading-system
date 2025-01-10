@@ -1,8 +1,8 @@
 from datetime import date
 from functools import partial
 
-from backtester import Backtester
-from strategies import momentum_strategy
+from shared.backtester import Backtester
+from shared.strategies import momentum_strategy
 
 print("\n" + "-" * 50 + " Last Period Portfolio " + "-" * 50)
 

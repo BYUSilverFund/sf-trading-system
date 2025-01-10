@@ -16,7 +16,7 @@ def momentum_signal(chunk: pl.DataFrame, interval: str = "daily"):
         pl.col("logret")
         .rolling_sum(window_size=window, min_periods=window, center=False)
         .shift(1)  # Lag signal
-        .over("ticker")
+        .over("permno")
         .alias("mom")
     )
     return signal

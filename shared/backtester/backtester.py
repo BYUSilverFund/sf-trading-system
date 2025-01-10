@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import polars as pl
 import seaborn as sns
 
-from shared.datasets import AlpacaStock
+from shared.datasets import CRSPMonthly
 
 
 class Backtester:
@@ -17,20 +17,20 @@ class Backtester:
 
     def run(self):
         data = (
-            AlpacaStock(
+            CRSPMonthly(
                 start_date=self.start_date,
                 end_date=self.end_date,
                 interval=self.interval,
             )
             .load()
-            .select("ticker", "date", "ret")
+            .select("permno", "date", "ret")
         )
 
         portfolios = self.strategy()
 
         portfolios = pl.concat(portfolios)
 
-        merged = data.join(portfolios, how="inner", on=["date", "ticker"])
+        merged = data.join(portfolios, how="inner", on=["date", "permno"])
 
         merged = merged.with_columns((pl.col("weight") * pl.col("ret")).alias("weighted_ret"))
 
@@ -52,9 +52,9 @@ class Backtester:
         print(pnl)
 
         # Cumulative product plot
-        sns.lineplot(data=pnl, x="date", y="cumprod")
+        sns.lineplot(data=pnl, x="date", y="cumsum")
         plt.ylabel("Cummulative returns (product)")
         plt.xlabel("Date")
         plt.xticks(rotation=45)
         plt.tight_layout()
-        plt.show()
+        plt.savefig("momentum_bt.png")

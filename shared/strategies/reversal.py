@@ -2,11 +2,11 @@ from datetime import date
 from functools import partial
 
 import polars as pl
-from optimizers import decile_portfolio
-from signals import reversal_signal
 
 from shared.components import ChunkedData
-from shared.datasets import AlpacaStock
+from shared.datasets import CRSPMonthly
+from shared.strategies.optimizers import decile_portfolio
+from shared.strategies.signals import reversal_signal
 
 
 def reversal_strategy(interval: str = "daily") -> list[pl.DataFrame]:
@@ -21,12 +21,12 @@ def reversal_strategy(interval: str = "daily") -> list[pl.DataFrame]:
             window = 1
 
     # Pull raw data
-    raw_data = AlpacaStock(
+    raw_data = CRSPMonthly(
         start_date=date(2020, 1, 1), end_date=date(2024, 12, 31), interval=interval
     ).load()
 
     # Create chunks
-    chunked_data = ChunkedData(raw_data, window, ["date", "ticker", "ret"])
+    chunked_data = ChunkedData(raw_data, window, ["date", "permno", "ret"])
 
     # Apply signal transformations
     chunked_data.apply_signal_transform(partial(reversal_signal, interval=interval))
