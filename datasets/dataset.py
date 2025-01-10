@@ -2,7 +2,9 @@ import os
 from abc import ABC, abstractmethod
 
 import pandas as pd
+
 DATA_DIR = ""
+
 
 class Dataset(ABC):
     def __init__(self, RAW_FILE_PATH: str, CLEAN_FILE_PATH: str) -> None:
