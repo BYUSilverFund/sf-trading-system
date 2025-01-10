@@ -2,10 +2,11 @@ from datetime import date
 from functools import partial
 
 import polars as pl
-from qcomponents import ChunkedData
-from src.datasets import AlpacaStock
-from src.optimizers import decile_portfolio
-from src.signals import reversal_signal
+from optimizers import decile_portfolio
+from signals import reversal_signal
+
+from shared.components import ChunkedData
+from shared.datasets import AlpacaStock
 
 
 def reversal_strategy(interval: str = "daily") -> list[pl.DataFrame]:
