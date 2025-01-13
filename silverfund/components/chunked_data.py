@@ -1,19 +1,39 @@
-from typing import Self
-
+import exchange_calendars as ecals
 import polars as pl
+from tqdm import tqdm
+
+from silverfund.components.enums import Interval
+from silverfund.components.strategies.strategy import Strategy
 
 
 class ChunkedData:
-    def __init__(self, data: pl.DataFrame, window: int, columns: list[str]):
-        self.window = window
+    def __init__(self, data: pl.DataFrame, interval: Interval, window: int, columns: list[str]):
+        min_date = data["date"].min()
+        max_date = data["date"].max()
 
-        unique_dates = data.select("date").unique().sort(by="date")["date"].to_list()
+        nyse = ecals.get_calendar("XNYS")
+        schedule = nyse.sessions_in_range(min_date, max_date).to_list()
+        schedule = (
+            pl.DataFrame(schedule)
+            .rename({"column_0": "date"})
+            .with_columns(pl.col("date").dt.date())
+        )
+
+        if interval == Interval.MONTHLY:
+            schedule = schedule.with_columns(pl.col("date").dt.truncate("1mo")).unique()
+
+        schedule = (
+            schedule.filter(pl.col("date") >= min_date, pl.col("date") <= max_date)
+            .sort(by="date")["date"]
+            .to_list()
+        )
+
         chunks = []
 
-        for i in range(window, len(unique_dates) + 1):
+        for i in tqdm(range(window, len(schedule) + 1), desc="Chunking data"):
 
-            start_date = unique_dates[i - window]
-            end_date = unique_dates[i - 1]
+            start_date = schedule[i - window]
+            end_date = schedule[i - 1]
 
             chunk = data.filter(
                 (pl.col("date") >= start_date) & (pl.col("date") <= end_date)
@@ -23,21 +43,13 @@ class ChunkedData:
 
         self._chunks: list[pl.DataFrame] = chunks
 
-    def apply_signal_transform(self, signal) -> Self:
-        for i, chunk in enumerate(self.chunks):
-            self.chunks[i] = signal(chunk)
-
-        return self
-
-    def apply_portfolio_gen(self, portfolio_generator) -> list[pl.DataFrame]:
-        portfolios = []
-        for chunk in self.chunks:
-            portfolios.append(portfolio_generator(chunk))
-        return portfolios
-
-    def remove_chunks(self):
-        """Remove chunks that do not have the full window of data."""
-        self._chunks = [chunk for chunk in self._chunks if len(chunk.drop_nulls()) > 10]
+    def apply_strategy(self, strategy: Strategy) -> list[pl.DataFrame]:
+        portfolios_list = []
+        for chunk in tqdm(self._chunks, desc="Running strategy"):
+            portfolios = strategy.compute_portfolio(chunk)
+            if not portfolios.is_empty():
+                portfolios_list.append(portfolios)
+        return portfolios_list
 
     @property
     def chunks(self) -> list[pl.DataFrame]:

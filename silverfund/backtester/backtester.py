@@ -1,35 +1,46 @@
+import time
 from datetime import date
 
 import matplotlib.pyplot as plt
 import polars as pl
 import seaborn as sns
-from shared.datasets import CRSPMonthly
+
+from silverfund.components.chunked_data import ChunkedData
+from silverfund.components.strategies.strategy import Strategy
+from silverfund.datasets import AlpacaStock
 
 
 class Backtester:
 
-    def __init__(self, start_date: date, end_date: date, interval: str, strategy):
+    def __init__(self, start_date: date, end_date: date, interval: str, strategy: Strategy):
         self.start_date = start_date
         self.end_date = end_date
         self.interval = interval
-        self.strategy = strategy
+        self.strategy = strategy(interval)
 
     def run(self):
-        data = (
-            CRSPMonthly(
-                start_date=self.start_date,
-                end_date=self.end_date,
-                interval=self.interval,
-            )
-            .load()
-            .select("permno", "date", "ret")
+
+        dataset = AlpacaStock(
+            start_date=self.start_date,
+            end_date=self.end_date,
+            interval=self.interval,
+        )
+        dataset.download()
+        data = dataset.load().select("ticker", "date", "ret")
+
+        # Create chunks
+        chunked_data = ChunkedData(
+            data=data,
+            interval=self.interval,
+            window=self.strategy.window,
+            columns=["date", "ticker", "ret"],
         )
 
-        portfolios = self.strategy()
+        portfolios = chunked_data.apply_strategy(self.strategy)
 
         portfolios = pl.concat(portfolios)
 
-        merged = data.join(portfolios, how="inner", on=["date", "permno"])
+        merged = data.join(portfolios, how="inner", on=["date", "ticker"])
 
         merged = merged.with_columns((pl.col("weight") * pl.col("ret")).alias("weighted_ret"))
 
@@ -48,12 +59,14 @@ class Backtester:
             )
         )
 
+        # Output
+        print("\n" + "-" * 50 + " Backtest P&L " + "-" * 50)
+
         print(pnl)
 
-        # Cumulative product plot
-        sns.lineplot(data=pnl, x="date", y="cumsum")
+        sns.lineplot(data=pnl, x="date", y="cumprod")
         plt.ylabel("Cummulative returns (product)")
         plt.xlabel("Date")
         plt.xticks(rotation=45)
         plt.tight_layout()
-        plt.savefig("momentum_bt.png")
+        plt.show()
