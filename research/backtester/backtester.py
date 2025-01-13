@@ -3,7 +3,6 @@ from datetime import date
 import matplotlib.pyplot as plt
 import polars as pl
 import seaborn as sns
-
 from shared.datasets import CRSPMonthly
 
 

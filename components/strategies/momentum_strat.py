@@ -2,23 +2,23 @@ from datetime import date
 from functools import partial
 
 import polars as pl
-
 from shared.components import ChunkedData
 from shared.datasets import CRSPMonthly
 from shared.strategies.optimizers import decile_portfolio
-from shared.strategies.signals import reversal_signal
+from shared.strategies.signals import momentum_signal
 
 
-def reversal_strategy(interval: str = "daily") -> list[pl.DataFrame]:
+def momentum_strategy(interval: str = "daily") -> list[pl.DataFrame]:
     """
-    This is the script for the classic short term reversal trading strategy.
+    This is the script for the classic momentum trading strategy.
     It should be able to be passed to both a backtester and a live/paper trader.
     """
+
     match interval:
         case "daily":
-            window = 23
+            window = 231
         case "monthly":
-            window = 1
+            window = 12
 
     # Pull raw data
     raw_data = CRSPMonthly(
@@ -26,21 +26,21 @@ def reversal_strategy(interval: str = "daily") -> list[pl.DataFrame]:
     ).load()
 
     # Create chunks
-    chunked_data = ChunkedData(raw_data, window, ["date", "permno", "ret"])
+    chunked_data = ChunkedData(data=raw_data, window=window, columns=["date", "permno", "ret"])
 
     # Apply signal transformations
-    chunked_data.apply_signal_transform(partial(reversal_signal, interval=interval))
+    chunked_data.apply_signal_transform(partial(momentum_signal, interval=interval))
     chunked_data.remove_chunks()
 
     # Generate portfolios
     portfolios_list: list[list[pl.DataFrame]] = chunked_data.apply_portfolio_gen(
-        partial(decile_portfolio, signal="rev")
+        partial(decile_portfolio, signal="mom")
     )
 
-    # Long poor reversal, short good reversal
+    # Long good momentum, short poor momentum
     portfolios_list = [
-        pl.concat([portfolios[0], portfolios[9].with_columns(pl.col("weight") * -1)]).drop(
-            ["bin", "rev"]
+        pl.concat([portfolios[0].with_columns(pl.col("weight") * -1), portfolios[9]]).drop(
+            ["bin", "mom"]
         )
         for portfolios in portfolios_list
     ]

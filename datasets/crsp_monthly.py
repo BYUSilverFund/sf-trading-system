@@ -2,7 +2,6 @@ from datetime import date
 
 import gdown
 import polars as pl
-
 from shared.database import Database
 from shared.datasets.dataset import Dataset
 
