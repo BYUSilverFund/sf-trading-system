@@ -8,6 +8,7 @@ dependencies = [
     "cvxpy>=1.6.0",
     "exchange-calendars>=4.7",
     "gdown>=5.2.0",
+    "ipykernel>=6.29.5",
     "matplotlib>=3.10.0",
     "numpy>=2.2.1",
     "polars>=1.19.0",
@@ -16,4 +17,5 @@ dependencies = [
     "python-dotenv>=1.0.1",
     "scipy>=1.15.0",
     "seaborn>=0.13.2",
+    "tqdm>=4.67.1",
 ]
