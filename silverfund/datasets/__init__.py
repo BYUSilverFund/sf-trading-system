@@ -6,6 +6,7 @@ from .barra_specific_risk_forecast import BarraSpecificRiskForecast
 from .crsp_daily import CRSPDaily
 from .crsp_monthly import CRSPMonthly
 from .russell_constituents import RussellConstituents
+from .security_mapping import SecurityMapping
 
 __all__ = [
     "CRSPMonthly",
@@ -16,4 +17,5 @@ __all__ = [
     "BarraReturns",
     "BarraRiskForecasts",
     "RussellConstituents",
+    "SecurityMapping",
 ]

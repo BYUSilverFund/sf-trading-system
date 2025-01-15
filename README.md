@@ -1,10 +1,10 @@
 # Silver Fund Trading System Repository
 The all in one repository for researching, backtesting, and trading quantitative trading strategies.
 
-## Getting Started
+# Getting Started
 
-### Clone Repository
-In your desired folder run
+## Clone Repository
+In your desired folder run:
 ```bash
 git clone https://github.com/BYUSilverFund/sf-trading-system.git
 ```
@@ -14,7 +14,9 @@ Open in vscode
 code sf-trading-system
 ```
 
-### Setup git
+## Git Setup
+Configure your git credentials. Otherwise you won't be able to commit any code.
+
 ```bash
 git config --global user.name <username>
 ```
@@ -22,7 +24,11 @@ git config --global user.name <username>
 git config --global user.email <email>
 ```
 
-### Install UV
+## Virtual Environment Setup
+The virtual environment will make it so that we have consistent package and Python versions across all of our devices running the repository.
+
+### `uv` Installation (Package Manager)
+
 MacOS/Linux (Supercomputer)
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh
@@ -56,7 +62,7 @@ uv sync
 ```
 
 ### Activate Environment
-MacOS/Linux
+MacOS/Linux (Supercomputer)
 ```bash
 source .venv/bin/activate
 ```
@@ -66,7 +72,9 @@ Windows
 .venv/Scripts/activate
 ```
 
-### Add Module to Python Path
+## Add Module to Python Path
+This step will allow for you to import any module from the project to any other file.
+
 ```bash
 code ~/.bashrc
 ```
@@ -79,26 +87,35 @@ export PYTHONPATH=/path/to/project/sf-trading-system/:$PYTHONPATH
 
 Make sure to kill all running terminals and reopen for the environment to reset.
 
-### Install pre-commit
+## Install `pre-commit`
+pre-commit will clean up any code that you write when you commit it. This helps with formatting consistency across the repository.
 ``` bash
 pre-commit install
 ```
 
+## Create `.env` File
+Create a new file in your `sf-trading-system` directory called `.env`.
+In the file add the following line but with your path.
+
+```bash
+ROOT=/path/to/sf-trading-system
+```
+
 That's it! You are all ready to go with the project!
 
-## Commands
+## Useful Commands
 
 ### Add a Dependency
 ```bash
 uv add <package>
 ```
 
-## Remove a Dependency
+### Remove a Dependency
 ```bash
 uv remove <package>
 ```
 
-## Format Code
+### Format Code
 ```bash
 pre-commit run --all-files
 ```
