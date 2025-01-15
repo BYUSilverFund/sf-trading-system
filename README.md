@@ -39,7 +39,7 @@ code ~/.zshrc
 
 Add this line to the bottom:
 ```bash
-# Custom python path for quant-fabric project
+# Custom python path for sf-trading-system project
 export PYTHONPATH=/path/to/project/sf-trading-system/:$PYTHONPATH
 ```
 
@@ -68,4 +68,3 @@ uv remove <package>
 ```bash
 pre-commit run --all-files
 ```
-
