@@ -1,14 +1,10 @@
 import os
-from datetime import date
 from pathlib import Path
-from typing import Optional
 
 import polars as pl
 from dotenv import load_dotenv
-from tqdm import tqdm
 
 from silverfund.database import Database
-from silverfund.datasets.dataset import Dataset
 
 
 class BarraFactorExposures:
@@ -24,21 +20,22 @@ class BarraFactorExposures:
         self._folder = root_dir / "groups" / "grp_quant" / "data" / "barra_usslow"
         self._files = os.listdir(self._folder)
 
-    def download(self, redownload: bool = False):
-        years = range(1995, 2026)
+    def load(self, year: int) -> pl.DataFrame:
 
-        dfs = []
-        for year in tqdm(years, desc="Downloading parquet files"):
-            df = pl.read_parquet(self._folder / f"exposures_{year}.parquet")
-            dfs.append(self.clean(df))
+        file = f"exposures_{year}.parquet"
 
-        result = pl.concat(dfs)
+        return self.clean(pl.read_parquet(self._folder / file))
 
-        self.db.create("BARRA_FACTOR_EXPOSURES", result)
+    def get_all_years(self) -> list[int]:
 
-    def load(self) -> pl.DataFrame:
+        years = []
+        for file in self._files:
+            file_arr = file.split("_")
+            if file_arr[0] == "exposures":
+                year = file_arr[1].split(".")[0]
+                years.append(year)
 
-        return self.db.read("BARRA_FACTOR_EXPOSURES")
+        return years
 
     @staticmethod
     def clean(df: pl.DataFrame) -> pl.DataFrame:
@@ -65,8 +62,19 @@ class BarraFactorExposures:
 
         return df
 
+    # # Future implementation
+    # def download(self, redownload: bool = False):
+    #     years = range(1995, 2026)
 
-if __name__ == "__main__":
-    bf = BarraFactorExposures()
-    bf.download()
-    print(bf.load())
+    #     dfs = []
+    #     for year in tqdm(years, desc="Downloading parquet files"):
+    #         df = pl.read_parquet(self._folder / f"exposures_{year}.parquet")
+    #         dfs.append(self.clean(df))
+
+    #     result = pl.concat(dfs)
+
+    #     self.db.create("BARRA_FACTOR_EXPOSURES", result)
+
+    # def load(self) -> pl.DataFrame:
+
+    #     return self.db.read("BARRA_FACTOR_EXPOSURES")
