@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 from silverfund.database import Database
 
 
-class BarraFactorExposures:
+class BarraFactorCovariances:
 
     def __init__(self) -> None:
         self.db = Database()
@@ -22,7 +22,7 @@ class BarraFactorExposures:
 
     def load(self, year: int) -> pl.DataFrame:
 
-        file = f"exposures_{year}.parquet"
+        file = f"factor_covariance_{year}.parquet"
 
         return self.clean(pl.read_parquet(self._folder / file))
 
@@ -31,8 +31,8 @@ class BarraFactorExposures:
         years = []
         for file in self._files:
             file_arr = file.split("_")
-            if file_arr[0] == "exposures":
-                year = file_arr[1].split(".")[0]
+            if file_arr[0] == "factor":
+                year = file_arr[2].split(".")[0]
                 years.append(year)
 
         return years
@@ -48,36 +48,22 @@ class BarraFactorExposures:
         df = (
             df.with_columns(pl.col("Combined").str.split("/").alias("parts"))
             .with_columns(
-                pl.col("parts").list.first().alias("Barrid"),
-                pl.col("parts").list.last().alias("Factor"),
+                pl.col("parts").list.first().alias("Factor1"),
+                pl.col("parts").list.last().alias("Factor2"),
             )
             .drop(["Combined", "parts"])
         )
 
         # Melt date headers into a column
-        df = df.unpivot(index=["Barrid", "Factor"], variable_name="Date", value_name="Exposure")
+        df = df.unpivot(index=["Factor1", "Factor2"], variable_name="Date", value_name="Covariance")
+
+        # Pivot out factor 2
+        df = df.pivot(on="Factor2", index=["Date", "Factor1"])
 
         # Cast date type
         df = df.with_columns(pl.col("Date").str.strptime(pl.Date).dt.date())
 
-        # Sort
-        df = df.sort(by=["Barrid", "Date"])
+        # # Sort
+        df = df.sort(by=["Date", "Factor1"])
 
         return df
-
-    # # Future implementation
-    # def download(self, redownload: bool = False):
-    #     years = range(1995, 2026)
-
-    #     dfs = []
-    #     for year in tqdm(years, desc="Downloading parquet files"):
-    #         df = pl.read_parquet(self._folder / f"exposures_{year}.parquet")
-    #         dfs.append(self.clean(df))
-
-    #     result = pl.concat(dfs)
-
-    #     self.db.create("BARRA_FACTOR_EXPOSURES", result)
-
-    # def load(self) -> pl.DataFrame:
-
-    #     return self.db.read("BARRA_FACTOR_EXPOSURES")
