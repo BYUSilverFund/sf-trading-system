@@ -57,6 +57,9 @@ class BarraFactorExposures:
         # Melt date headers into a column
         df = df.unpivot(index=["Barrid", "Factor"], variable_name="Date", value_name="Value")
 
+        # Cast date type
+        df = df.with_columns(pl.col("Date").str.strptime(pl.Date).dt.date())
+
         # Sort
         df = df.sort(by=["Barrid", "Date"])
 

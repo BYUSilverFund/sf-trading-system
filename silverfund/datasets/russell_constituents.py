@@ -19,9 +19,20 @@ class RussellConstituents:
 
         self._file_path = root_dir / "groups" / "grp_quant" / "data" / "russell_history.parquet"
 
-    def load(self) -> pl.DataFrame:
+    def load_all(self) -> pl.DataFrame:
 
         return self.clean(pl.read_parquet(self._file_path))
+
+    @staticmethod
+    def clean(df: pl.DataFrame) -> pl.DataFrame:
+
+        df = df.with_columns(
+            pl.col("date").dt.date(),
+            pl.col("obsdate").dt.date(),
+            pl.col("enddate").dt.date(),
+        )
+
+        return df
 
 
 if __name__ == "__main__":
