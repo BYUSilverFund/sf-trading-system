@@ -30,12 +30,12 @@ class Database:
         """
         load_dotenv()
 
-        root_dir = os.getenv("ROOT_DIR")
-        if not root_dir:
-            raise ValueError("ROOT_DIR environment variable must be set")
+        root = os.getenv("ROOT")
+        if not root:
+            raise ValueError("ROOT environment variable must be set")
 
-        self._tables_dir = os.path.join(root_dir, "shared/database/.tables")
-        self._archive_dir = os.path.join(root_dir, "shared/database/.archive")
+        self._tables_dir = os.path.join(root, "silverfund/database/.tables")
+        self._archive_dir = os.path.join(root, "silverfund/database/.archive")
 
         # Create necessary directories
         os.makedirs(self._tables_dir, exist_ok=True)

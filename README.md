@@ -3,8 +3,27 @@ The all in one repository for researching, backtesting, and trading quantitative
 
 ## Getting Started
 
+### Clone Repository
+In your desired folder run
+```bash
+git clone https://github.com/BYUSilverFund/sf-trading-system.git
+```
+
+Open in vscode
+```
+code sf-trading-system
+```
+
+### Setup git
+```bash
+git config --global user.name <username>
+```
+```bash
+git config --global user.email <email>
+```
+
 ### Install UV
-MacOS
+MacOS/Linux (Supercomputer)
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
@@ -14,13 +33,30 @@ Windows
 powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
 ```
 
+### Check installation
+```bash
+uv --version
+```
+
+If this returns an error you might need to add uv to your path. Run:
+```bash
+code ~/.bashrc
+```
+
+And add the following to the bottom of the file.
+```bash
+# UV
+. "$HOME/.local/bin/env"
+```
+Restart your terminal for the changes to take effect.
+
 ### Sync Denpendencies
 ```bash
 uv sync
 ```
 
 ### Activate Environment
-MacOS
+MacOS/Linux
 ```bash
 source .venv/bin/activate
 ```
@@ -31,10 +67,8 @@ Windows
 ```
 
 ### Add Module to Python Path
-I prefer editing rc files in vs code but you can also use vim or nano
-Note: if you don'
 ```bash
-code ~/.zshrc
+code ~/.bashrc
 ```
 
 Add this line to the bottom:
