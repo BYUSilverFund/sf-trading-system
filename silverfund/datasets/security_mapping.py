@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 from pathlib import Path
 
 import polars as pl
@@ -38,3 +39,11 @@ class SecurityMapping:
         df = df.select(dates + ids + [col for col in df.columns if col not in (dates + ids)])
 
         return df
+
+    def to_datetime(date) -> datetime:
+        for fmt in ("%Y-%m-%d", "%Y"):  # Specify possible formats
+            try:
+                return datetime.strptime(date, fmt)
+            except ValueError:
+                continue
+        raise ValueError(f"Date format not recognized: {date}. Try '%Y-%m-%d' or '%Y'.")
