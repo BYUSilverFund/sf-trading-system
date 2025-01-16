@@ -36,26 +36,26 @@ class BarraRiskForecasts:
 
         return years
 
-    def get_total_vol_forcasts(self, date: date, stocks: list[str] = None) -> pl.DataFrame:
+    def get_total_vol_forcasts(self, date: date, barr_id_list: list[str] = None) -> pl.DataFrame:
         year = date.year
 
         risk_forecast_year = BarraRiskForecasts().load(year)
-        if stocks:
+        if barr_id_list:
             return risk_forecast_year.filter(
-                pl.col("Date") == date, pl.col("Barrid").is_in(stocks)
+                pl.col("Date") == date, pl.col("Barrid").is_in(barr_id_list)
             ).select(["Date", "Barrid", "total_risk"])
         else:
             return risk_forecast_year.filter(pl.col("Date") == date).select(
                 ["Date", "Barrid", "total_risk"]
             )
 
-    def get_spec_vol_forcasts(self, date: date, stocks: list[str] = None) -> pl.DataFrame:
+    def get_spec_vol_forcasts(self, date: date, barr_id_list: list[str] = None) -> pl.DataFrame:
         year = date.year
 
         risk_forecast_year = BarraRiskForecasts().load(year)
-        if stocks:
+        if barr_id_list:
             return risk_forecast_year.filter(
-                pl.col("Date") == date, pl.col("Barrid").is_in(stocks)
+                pl.col("Date") == date, pl.col("Barrid").is_in(barr_id_list)
             ).select(["Date", "Barrid", "spec_risk"])
         else:
             return risk_forecast_year.filter(pl.col("Date") == date).select(
