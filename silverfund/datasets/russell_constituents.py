@@ -1,11 +1,10 @@
+import datetime
 import os
-from datetime import date
 from pathlib import Path
 from typing import Optional
 
 import polars as pl
 from dotenv import load_dotenv
-from security_mapping import SecurityMapping
 
 from silverfund.database import Database
 
@@ -29,21 +28,23 @@ class RussellConstituents:
     def get_benchmark_wts(
         self,
         id_scheme: str,
-        start_date: Optional[date] = None,
-        end_date: Optional[date] = None,
+        start_date: Optional[datetime.date] = None,
+        end_date: Optional[datetime.date] = None,
         id_list: Optional[list] = None,
     ) -> pl.DataFrame:
         # Loading in Russell 3000 data from parquet
         russell_history = pl.read_parquet(self._file_path)
         # Restricting columns of dataframe to date, id scheme, and weights
-        benchmark_wts = russell_history[["date", f"{id_scheme}", "r3000_wt"]]
+        benchmark_wts = russell_history.select(["date", f"{id_scheme}", "r3000_wt"])
         # Filtering to specified date range, if given; if not, all dates are given by default
         if start_date:
-            start_date = SecurityMapping.to_datetime(start_date)
-            benchmark_wts = benchmark_wts.filter(pl.col("date") >= start_date)
+            benchmark_wts = benchmark_wts.filter(
+                pl.col("date") >= datetime.datetime.strptime(start_date, "%Y-%m-%d")
+            )
         if end_date:
-            end_date = SecurityMapping.to_datetime(end_date)
-            benchmark_wts = benchmark_wts.filter(pl.col("date") <= end_date)
+            benchmark_wts = benchmark_wts.filter(
+                pl.col("date") <= datetime.datetime.strptime(end_date, "%Y-%m-%d")
+            )
         # Filtering to specified ids, if given; if not, all are given by default
         if id_list:
             benchmark_wts = benchmark_wts.filter(pl.col(f"{id_scheme}").is_in(id_list))
