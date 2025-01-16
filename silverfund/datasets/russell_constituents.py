@@ -1,5 +1,7 @@
 import os
+from datetime import date
 from pathlib import Path
+from typing import Optional
 
 import polars as pl
 from dotenv import load_dotenv
@@ -24,21 +26,27 @@ class RussellConstituents:
 
         return self.clean(pl.read_parquet(self._file_path))
 
-    def get_benchmark_wts(self, id_scheme, dates=None, ids=None) -> pl.DataFrame:
+    def get_benchmark_wts(
+        self,
+        id_scheme: str,
+        start_date: Optional[date] = None,
+        end_date: Optional[date] = None,
+        id_list: Optional[list] = None,
+    ) -> pl.DataFrame:
         # Loading in Russell 3000 data from parquet
         russell_history = pl.read_parquet(self._file_path)
         # Restricting columns of dataframe to date, id scheme, and weights
         benchmark_wts = russell_history[["date", f"{id_scheme}", "r3000_wt"]]
         # Filtering to specified date range, if given; if not, all dates are given by default
-        if dates:
-            date_range = [SecurityMapping.to_datetime(date) for date in dates]
-            start_date, end_date = date_range
-            benchmark_wts = benchmark_wts.filter(
-                (pl.col("date") >= start_date) & (pl.col("date") <= end_date)
-            )
+        if start_date:
+            start_date = SecurityMapping.to_datetime(start_date)
+            benchmark_wts = benchmark_wts.filter(pl.col("date") >= start_date)
+        if end_date:
+            end_date = SecurityMapping.to_datetime(end_date)
+            benchmark_wts = benchmark_wts.filter(pl.col("date") <= end_date)
         # Filtering to specified ids, if given; if not, all are given by default
-        if ids:
-            benchmark_wts = benchmark_wts.filter(pl.col(f"{id_scheme}").is_in(ids))
+        if id_list:
+            benchmark_wts = benchmark_wts.filter(pl.col(f"{id_scheme}").is_in(id_list))
         return benchmark_wts
 
     @staticmethod
@@ -55,4 +63,4 @@ class RussellConstituents:
 
 if __name__ == "__main__":
     rus = RussellConstituents()
-    print(rus.get_benchmark_wts("permno", ["2001-01-01", "2003-01-01"], [82766, 84161]))
+    print(rus.get_benchmark_wts("permno", "2021-01-01", "2024-12-31", [15857, 16454, 92679]))
