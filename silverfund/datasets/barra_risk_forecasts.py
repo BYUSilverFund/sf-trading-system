@@ -1,4 +1,5 @@
 import os
+from datetime import date
 from pathlib import Path
 
 import polars as pl
@@ -34,6 +35,32 @@ class BarraRiskForecasts:
             years.append(year)
 
         return years
+
+    def get_total_vol_forcasts(self, date: date, barr_id_list: list[str] = None) -> pl.DataFrame:
+        year = date.year
+
+        risk_forecast_year = BarraRiskForecasts().load(year)
+        if barr_id_list:
+            return risk_forecast_year.filter(
+                pl.col("Date") == date, pl.col("Barrid").is_in(barr_id_list)
+            ).select(["Date", "Barrid", "total_risk"])
+        else:
+            return risk_forecast_year.filter(pl.col("Date") == date).select(
+                ["Date", "Barrid", "total_risk"]
+            )
+
+    def get_spec_vol_forcasts(self, date: date, barr_id_list: list[str] = None) -> pl.DataFrame:
+        year = date.year
+
+        risk_forecast_year = BarraRiskForecasts().load(year)
+        if barr_id_list:
+            return risk_forecast_year.filter(
+                pl.col("Date") == date, pl.col("Barrid").is_in(barr_id_list)
+            ).select(["Date", "Barrid", "spec_risk"])
+        else:
+            return risk_forecast_year.filter(pl.col("Date") == date).select(
+                ["Date", "Barrid", "spec_risk"]
+            )
 
     @staticmethod
     def clean(df: pl.DataFrame) -> pl.DataFrame:
