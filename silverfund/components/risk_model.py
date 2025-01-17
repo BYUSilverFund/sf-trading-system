@@ -19,10 +19,7 @@ import numpy as np
 import pandas as pd
 import tqdm
 
-from silverfund.datasets.dataio import (load_default_monthly_universe,
-                                        load_exposure_matrix,
-                                        load_factor_covariance_matrix,
-                                        load_idio_risk_vector)
+from silverfund.datasets.dataio import *
 
 # ----------------------------------------------------------------------------------------------
 #                                    Risk Model Classes

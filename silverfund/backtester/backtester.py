@@ -7,7 +7,7 @@ import seaborn as sns
 
 from silverfund.components.chunked_data import ChunkedData
 from silverfund.components.strategies.strategy import Strategy
-from silverfund.datasets import AlpacaStock
+from silverfund.datasets import CRSPDaily
 
 
 class Backtester:
@@ -20,7 +20,7 @@ class Backtester:
 
     def run(self):
 
-        dataset = AlpacaStock(
+        dataset = CRSPDaily(
             start_date=self.start_date,
             end_date=self.end_date,
             interval=self.interval,

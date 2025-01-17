@@ -16,11 +16,9 @@ from tqdm import tqdm
 
 import silverfund.components.optimizers.constraints as cons
 from silverfund.components.alpha import PreComputedAlpha
-from silverfund.components.optimizers.portfolio_constructor import \
-    MVPortfolioConstructor
+from silverfund.components.optimizers import MVPortfolioConstructor
 from silverfund.components.risk_model import FactorRiskModel
-from silverfund.datasets.dataio import (load_default_monthly_universe,
-                                        load_list_of_valid_barra_dates)
+from silverfund.datasets.dataio import *
 
 # ----------------------------------------------------------------------------------------------
 #                                       MVBacktester Class

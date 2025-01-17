@@ -1,4 +1,4 @@
-#   Module: portfolio_constructor.py
+#   Module: mv_optimizer.py
 #   Author: Brandon Bates
 #   Date: November 2023
 #   Purpose: Solve for MVE portfolio weights

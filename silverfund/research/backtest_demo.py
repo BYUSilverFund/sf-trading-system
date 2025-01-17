@@ -10,16 +10,13 @@
 # --- Imports ---
 import numpy as np
 import pandas as pd
+import polars as pl
 
 from silverfund.components.alpha import PreComputedAlpha
-from silverfund.components.optimizers.constraints import (
-    FullInvestmentConstraint, ZeroHoldingConstraint, ZeroInvestmentConstraint)
-from silverfund.components.optimizers.portfolio_constructor import \
-    MVPortfolioConstructor
+from silverfund.components.optimizers import MVPortfolioConstructor
+from silverfund.components.optimizers.constraints import *
 from silverfund.components.risk_model import FactorRiskModel
-from silverfund.datasets.dataio import (load_default_monthly_universe,
-                                        load_idio_risk_vector,
-                                        load_list_of_valid_barra_dates)
+from silverfund.datasets.dataio import *
 
 # ------------------------------------------------------------------------------------------------ #
 # Backtest Dates and Universe
@@ -47,6 +44,8 @@ cons = [ZeroHoldingConstraint(asset_ids_to_zero=valid_barra_ids[2:4]), FullInves
 mvpc = MVPortfolioConstructor(date=dt, alpha=alpha, risk_model=frm, constraints=cons)
 pp = mvpc.get_optimal_portfolio()
 
+print("Single Period Portfolio", pl.from_pandas(pp))
+
 # ----------------------------------------------------------------------------------------------------------------
 # --- History of Optimal Portfolios ---
 from silverfund.backtester import MVBacktester
@@ -62,4 +61,6 @@ alpha = pd.DataFrame(
     index=valid_barra_dates[start_dt_ix:end_dt_ix], columns=valid_barra_ids, data=1
 )
 bt = MVBacktester(alpha=alpha, constraints=cons)
-bt.get_optimal_portfolio_history(n_cpus=4)
+result = bt.get_optimal_portfolio_history(n_cpus=4)
+
+print("Backtest History", pl.from_pandas(result))
