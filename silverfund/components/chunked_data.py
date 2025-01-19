@@ -21,6 +21,7 @@ class ChunkedData:
 
         if interval == Interval.MONTHLY:
             schedule = schedule.with_columns(pl.col("date").dt.truncate("1mo")).unique()
+            schedule = schedule.with_columns(pl.col("date").dt.month_end())
 
         schedule = (
             schedule.filter(pl.col("date") >= min_date, pl.col("date") <= max_date)
@@ -29,8 +30,7 @@ class ChunkedData:
         )
 
         chunks = []
-
-        for i in tqdm(range(window, len(schedule) + 1), desc="Chunking data"):
+        for i in tqdm(range(window, len(schedule)), desc="Chunking data"):
 
             start_date = schedule[i - window]
             end_date = schedule[i - 1]

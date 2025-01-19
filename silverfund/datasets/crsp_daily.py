@@ -6,8 +6,6 @@ from typing import Optional
 import polars as pl
 from dotenv import load_dotenv
 
-from silverfund.database import Database
-
 
 class CRSPDaily:
 
@@ -31,15 +29,7 @@ class CRSPDaily:
         return self.clean(pl.read_parquet(self._folder / file))
 
     def load_all(self) -> pl.DataFrame:
-        df = self.clean(pl.read_parquet(self._master_file))
-
-        df = df.filter(
-            pl.col("date").is_between(self._start_date, self._end_date),
-            pl.col("shrcd").is_between(10, 11, closed="both"),  # Stocks
-            pl.col("exchcd").is_between(1, 3, closed="both"),  # NYSE, NASDAQ, AMEX
-        )
-
-        return df
+        return self.clean(pl.read_parquet(self._master_file))
 
     def get_all_years(self) -> list[int]:
         years = []
@@ -49,11 +39,16 @@ class CRSPDaily:
 
         return years
 
-    @staticmethod
-    def clean(df: pl.DataFrame) -> pl.DataFrame:
+    def clean(self, df: pl.DataFrame) -> pl.DataFrame:
 
         # Cast date types
         df = df.with_columns(pl.col("date").dt.date())
+
+        df = df.filter(
+            pl.col("date").is_between(self._start_date, self._end_date),
+            pl.col("shrcd").is_between(10, 11, closed="both"),  # Stocks
+            pl.col("exchcd").is_between(1, 3, closed="both"),  # NYSE, NASDAQ, AMEX
+        )
 
         # Sort
         df = df.sort(by=["permno", "date"])

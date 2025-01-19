@@ -18,13 +18,15 @@ class MomentumStrategy(Strategy):
         chunk = chunk.with_columns(pl.col("ret").log1p().alias("logret")).with_columns(
             pl.col("logret")
             .rolling_sum(window_size=self.window - 1, min_periods=self.window - 1, center=False)
-            .shift(1)  # Lag signal
             .over("permno")
+            .shift(1)
             .alias("mom")
         )
 
-        # If there isn't enough data return an empty portfolio
+        # Drop all null rows
         chunk = chunk.drop_nulls()
+
+        # If there isn't enough data return an empty portfolio
         if len(chunk) < 10:
             return pl.DataFrame()
 

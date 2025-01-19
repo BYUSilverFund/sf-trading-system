@@ -7,9 +7,7 @@ import seaborn as sns
 
 from silverfund.components.chunked_data import ChunkedData
 from silverfund.components.enums import Interval
-from silverfund.components.strategies.momentum_strategy import MomentumStrategy
 from silverfund.components.strategies.strategy import Strategy
-from silverfund.datasets import CRSPDaily, Master
 
 
 class Backtester:
@@ -37,20 +35,26 @@ class Backtester:
             window=self.strategy.window,
         )
 
+        # Apply strategy
         portfolios = chunked_data.apply_strategy(self.strategy)
 
+        # Concatenate portfolios
         portfolios = pl.concat(portfolios)
 
+        # Join historical data and portfolios
         merged = self.historical_data.join(portfolios, how="inner", on=["date", "permno"])
 
+        # Calculate weighted returns
         merged = merged.with_columns((pl.col("weight") * pl.col("ret")).alias("weighted_ret"))
 
+        # Calculte portfolio pnl
         pnl = (
             merged.group_by("date")
             .agg(weighted_ret_mean=pl.col("weighted_ret").sum(), n_assets=pl.col("date").count())
             .sort(by=["date"])
         )
 
+        # Calculate portfolio cummulative returns
         pnl = (
             pnl.with_columns(pl.col("weighted_ret_mean").alias("portfolio_ret"))
             .with_columns(pl.col("portfolio_ret").log1p().alias("portfolio_logret"))
@@ -60,40 +64,4 @@ class Backtester:
             )
         )
 
-        # Output
-        print("\n" + "-" * 50 + " Backtest P&L " + "-" * 50)
-
-        print(pnl)
-
-        sns.lineplot(data=pnl, x="date", y="cumsum")
-        plt.ylabel("Cummulative returns (sum)")
-        plt.xlabel("Date")
-        plt.xticks(rotation=45)
-        plt.tight_layout()
-        plt.show()
-
-
-if __name__ == "__main__":
-
-    start_date = date(2006, 1, 1)
-    end_date = date(2024, 12, 31)
-
-    # Load historical dataset
-    historical_data = (
-        CRSPDaily(
-            start_date=start_date,
-            end_date=end_date,
-        )
-        .load_all()
-        .select(["date", "permno", "ret"])
-    )
-
-    bt = Backtester(
-        start_date=start_date,
-        end_date=end_date,
-        interval=Interval.MONTHLY,
-        historical_data=historical_data,
-        strategy=MomentumStrategy,
-    )
-
-    bt.run()
+        return pnl

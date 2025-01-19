@@ -3,7 +3,9 @@ from datetime import date
 import polars as pl
 from tqdm import tqdm
 
-from silverfund.datasets import BarraRiskForecasts, CRSPDaily, RussellConstituents
+from silverfund.datasets.barra_risk_forecasts import BarraRiskForecasts
+from silverfund.datasets.crsp_daily import CRSPDaily
+from silverfund.datasets.russell_constituents import RussellConstituents
 
 
 class Master:
@@ -77,9 +79,3 @@ class Master:
         mapping = mapping.with_columns(pl.col("permno").cast(pl.Int64))
 
         return mapping
-
-
-if __name__ == "__main__":
-    master = Master(start_date=date(1995, 1, 1), end_date=date(2024, 12, 31))
-
-    print(master.load_all())
