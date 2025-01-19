@@ -19,7 +19,7 @@ class MomentumStrategy(Strategy):
             pl.col("logret")
             .rolling_sum(window_size=self.window - 1, min_periods=self.window - 1, center=False)
             .shift(1)  # Lag signal
-            .over("ticker")
+            .over("permno")
             .alias("mom")
         )
 

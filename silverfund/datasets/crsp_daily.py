@@ -1,5 +1,7 @@
 import os
+from datetime import date
 from pathlib import Path
+from typing import Optional
 
 import polars as pl
 from dotenv import load_dotenv
@@ -9,8 +11,9 @@ from silverfund.database import Database
 
 class CRSPDaily:
 
-    def __init__(self) -> None:
-        self.db = Database()
+    def __init__(self, start_date: Optional[date] = None, end_date: Optional[date] = None) -> None:
+        self._start_date = start_date
+        self._end_date = end_date or date.today()
 
         load_dotenv()
 
@@ -28,7 +31,15 @@ class CRSPDaily:
         return self.clean(pl.read_parquet(self._folder / file))
 
     def load_all(self) -> pl.DataFrame:
-        return self.clean(pl.read_parquet(self._master_file))
+        df = self.clean(pl.read_parquet(self._master_file))
+
+        df = df.filter(
+            pl.col("date").is_between(self._start_date, self._end_date),
+            pl.col("shrcd").is_between(10, 11, closed="both"),  # Stocks
+            pl.col("exchcd").is_between(1, 3, closed="both"),  # NYSE, NASDAQ, AMEX
+        )
+
+        return df
 
     def get_all_years(self) -> list[int]:
         years = []

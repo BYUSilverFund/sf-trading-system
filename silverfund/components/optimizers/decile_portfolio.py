@@ -1,8 +1,10 @@
 import numpy as np
 import polars as pl
 
+from silverfund.components.enums import Weighting
 
-def decile_portfolio(chunk: pl.DataFrame, signal: str, weighting: str = "equal"):
+
+def decile_portfolio(chunk: pl.DataFrame, signal: str, weighting: Weighting):
     chunk = chunk.drop_nulls()
 
     # Calculate decile percentiles
@@ -24,7 +26,7 @@ def decile_portfolio(chunk: pl.DataFrame, signal: str, weighting: str = "equal")
     ]
 
     # Weights
-    if weighting == "equal":
+    if weighting == Weighting.EQUAL:
         portfolios = [
             portfolio.with_columns(pl.lit(1 / len(portfolio)).alias("weight"))
             for portfolio in portfolios

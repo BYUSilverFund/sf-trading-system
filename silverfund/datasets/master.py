@@ -10,7 +10,7 @@ class Master:
 
     def __init__(self, start_date: date, end_date: date):
         self._start_date = start_date
-        self._end_date = end_date
+        self._end_date = end_date or date.today()
 
         # Load CRSP, mapping, and Barra Risk
         crsp = self._crsp()

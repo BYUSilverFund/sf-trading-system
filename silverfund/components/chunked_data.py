@@ -7,7 +7,7 @@ from silverfund.components.strategies.strategy import Strategy
 
 
 class ChunkedData:
-    def __init__(self, data: pl.DataFrame, interval: Interval, window: int, columns: list[str]):
+    def __init__(self, data: pl.DataFrame, interval: Interval, window: int):
         min_date = data["date"].min()
         max_date = data["date"].max()
 
@@ -35,9 +35,7 @@ class ChunkedData:
             start_date = schedule[i - window]
             end_date = schedule[i - 1]
 
-            chunk = data.filter(
-                (pl.col("date") >= start_date) & (pl.col("date") <= end_date)
-            ).select(columns)
+            chunk = data.filter((pl.col("date") >= start_date) & (pl.col("date") <= end_date))
 
             chunks.append(chunk)
 
