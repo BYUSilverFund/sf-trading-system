@@ -54,6 +54,6 @@ class BarraReturns:
         )
 
         # Sort
-        df = df.sort(by=["date", "barrid"])
+        df = df.sort(by=["barrid", "date"])
 
         return df
