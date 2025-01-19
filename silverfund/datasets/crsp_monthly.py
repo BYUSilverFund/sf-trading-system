@@ -14,8 +14,10 @@ class CRSPMonthly:
 
         load_dotenv()
 
-        user = os.getenv("ROOT").split("/")[2]
-        root_dir = Path(f"/home/{user}")
+        parts = os.getenv("ROOT").split("/")
+        home = parts[1]
+        user = parts[2]
+        root_dir = Path(f"/{home}/{user}")
 
         self._master_file = root_dir / "groups" / "grp_quant" / "data" / "msf.parquet"
 
