@@ -1,5 +1,7 @@
 import os
+from datetime import date
 from pathlib import Path
+from typing import Optional
 
 import polars as pl
 from dotenv import load_dotenv
@@ -22,13 +24,38 @@ class BarraFactorExposures:
         self._folder = root_dir / "groups" / "grp_quant" / "data" / "barra_usslow"
         self._files = os.listdir(self._folder)
 
-    def load_raw(self, year: int) -> pl.DataFrame:
+    def load(self, year: int, date: Optional[date] = None) -> pl.DataFrame:
 
         file = f"exposures_{year}.parquet"
 
-        return pl.read_parquet(self._folder / file)
+        date_column = date.strftime("%Y-%m-%d 00:00:00") if date else None
+        columns = ["Combined", date_column] if date else None
 
-    def load_clean(self, year: int) -> pl.DataFrame:
+        # Optionally read just a specific days exposures
+        df = pl.read_parquet(self._folder / file, columns=columns)
+
+        # Rename date column
+        df = df.rename({date_column: "exposure"}) if date_column else df
+
+        # Split Combined colum into barrid and factor
+        df = (
+            df.with_columns(pl.col("Combined").str.split("/").alias("parts"))
+            .with_columns(
+                pl.col("parts").list.first().alias("barrid"),
+                pl.col("parts").list.last().alias("factor"),
+            )
+            .drop(["Combined", "parts"])
+        )
+
+        # Reorder columns
+        columns = ["barrid", "factor"] + [
+            col for col in df.columns if col not in ["barrid", "factor"]
+        ]
+        df = df.select(columns)
+
+        return df
+
+    def load_pivoted(self, year: int) -> pl.DataFrame:
 
         file = f"exposures_{year}.parquet"
 
@@ -56,36 +83,19 @@ class BarraFactorExposures:
         df = (
             df.with_columns(pl.col("Combined").str.split("/").alias("parts"))
             .with_columns(
-                pl.col("parts").list.first().alias("Barrid"),
-                pl.col("parts").list.last().alias("Factor"),
+                pl.col("parts").list.first().alias("barrid"),
+                pl.col("parts").list.last().alias("factor"),
             )
             .drop(["Combined", "parts"])
         )
 
         # Melt date headers into a column
-        df = df.unpivot(index=["Barrid", "Factor"], variable_name="Date", value_name="Exposure")
+        df = df.unpivot(index=["barrid", "factor"], variable_name="date", value_name="exposure")
 
         # Cast date type
-        df = df.with_columns(pl.col("Date").str.strptime(pl.Date).dt.date())
+        df = df.with_columns(pl.col("date").str.strptime(pl.Date).dt.date())
 
         # Sort
-        df = df.sort(by=["Barrid", "Date"])
+        df = df.sort(by=["barrid", "date"])
 
         return df
-
-    # # Future implementation
-    # def download(self, redownload: bool = False):
-    #     years = range(1995, 2026)
-
-    #     dfs = []
-    #     for year in tqdm(years, desc="Downloading parquet files"):
-    #         df = pl.read_parquet(self._folder / f"exposures_{year}.parquet")
-    #         dfs.append(self.clean(df))
-
-    #     result = pl.concat(dfs)
-
-    #     self.db.create("BARRA_FACTOR_EXPOSURES", result)
-
-    # def load(self) -> pl.DataFrame:
-
-    #     return self.db.read("BARRA_FACTOR_EXPOSURES")

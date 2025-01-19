@@ -6,13 +6,14 @@ import polars as pl
 import seaborn as sns
 
 from silverfund.components.chunked_data import ChunkedData
+from silverfund.components.enums import Interval
 from silverfund.components.strategies.strategy import Strategy
 from silverfund.datasets import CRSPDaily
 
 
 class Backtester:
 
-    def __init__(self, start_date: date, end_date: date, interval: str, strategy: Strategy):
+    def __init__(self, start_date: date, end_date: date, interval: Interval, strategy: Strategy):
         self.start_date = start_date
         self.end_date = end_date
         self.interval = interval

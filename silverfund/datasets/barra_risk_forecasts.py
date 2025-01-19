@@ -23,13 +23,7 @@ class BarraRiskForecasts:
         self._folder = root_dir / "groups" / "grp_quant" / "data" / "barra_usslow_asset"
         self._files = os.listdir(self._folder)
 
-    def load_raw(self, year: int) -> pl.DataFrame:
-
-        file = f"asset_{year}.parquet"
-
-        return pl.read_parquet(self._folder / file)
-
-    def load_clean(self, year: int) -> pl.DataFrame:
+    def load(self, year: int) -> pl.DataFrame:
 
         file = f"asset_{year}.parquet"
 
@@ -76,14 +70,17 @@ class BarraRiskForecasts:
         df = df.drop("__index_level_0__")
 
         # Cast and rename date
-        df = df.with_columns(pl.col("DataDate").dt.date().alias("Date")).drop("DataDate")
+        df = df.with_columns(pl.col("DataDate").dt.date().alias("date")).drop("DataDate")
+
+        # Lowercase columns
+        df = df.rename({col: col.lower() for col in df.columns})
 
         # Reorder columns
         df = df.select(
-            ["Date", "Barrid"] + [col for col in df.columns if col not in ["Date", "Barrid"]]
+            ["date", "barrid"] + [col for col in df.columns if col not in ["date", "barrid"]]
         )
 
         # Sort
-        df = df.sort(by=["Date", "Barrid"])
+        df = df.sort(by=["date", "barrid"])
 
         return df
