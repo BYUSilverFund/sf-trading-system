@@ -10,19 +10,22 @@ from silverfund.datasets.russell_constituents import RussellConstituents
 
 class Master:
 
-    def __init__(self, start_date: date, end_date: date):
+    def __init__(self, start_date: date, end_date: date, quiet: bool = True):
         self._start_date = start_date
         self._end_date = end_date or date.today()
+        self._quiet = quiet
 
         # Load CRSP, mapping, and Barra Risk
         crsp = self._crsp()
         mapping = self._mapping()
         barra = self._barra_risk()
 
-        print("Joining CRSP -> mapping = Master")
+        if not quiet:
+            print("Joining CRSP -> mapping = Master")
         self.df = crsp.join(mapping, on="permno", how="inner")
 
-        print("Joining Master -> Barra Risk = Master")
+        if not quiet:
+            print("Joining Master -> Barra Risk = Master")
         self.df = self.df.join(barra, on=["barrid", "date"], how="inner")
 
         # Reorder columns
@@ -43,8 +46,12 @@ class Master:
         years = range(self._start_date.year, self._end_date.year + 1)
 
         crsp = []
-        for year in tqdm(years, desc="Loading CRSP Daily Data"):
-            crsp.append(dataset.load(year))
+        if self._quiet:
+            for year in years:
+                crsp.append(dataset.load(year))
+        else:
+            for year in tqdm(years, desc="Loading CRSP Daily Data"):
+                crsp.append(dataset.load(year))
 
         crsp = pl.concat(crsp)
 
@@ -63,8 +70,12 @@ class Master:
         years = range(self._start_date.year, self._end_date.year + 1)
 
         barra_risk = []
-        for year in tqdm(years, desc="Loading Barra Risk Forecasts"):
-            barra_risk.append(BarraRiskForecasts().load(year))
+        if self._quiet:
+            for year in years:
+                barra_risk.append(BarraRiskForecasts().load(year))
+        else:
+            for year in tqdm(years, desc="Loading Barra Risk Forecasts"):
+                barra_risk.append(BarraRiskForecasts().load(year))
 
         barra_risk = pl.concat(barra_risk)
 
