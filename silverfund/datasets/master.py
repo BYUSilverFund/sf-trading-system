@@ -37,13 +37,14 @@ class Master:
         return self.df
 
     def _crsp(self) -> pl.DataFrame:
+        dataset = CRSPDaily(start_date=self._start_date, end_date=self._end_date)
 
         # Join all yearly datasets
         years = range(self._start_date.year, self._end_date.year + 1)
 
         crsp = []
         for year in tqdm(years, desc="Loading CRSP Daily Data"):
-            crsp.append(CRSPDaily().load(year))
+            crsp.append(dataset.load(year))
 
         crsp = pl.concat(crsp)
 
