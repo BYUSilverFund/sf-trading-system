@@ -9,7 +9,7 @@ from silverfund.components.strategies.momentum_strategy import MomentumStrategy
 from silverfund.datasets import CRSPDaily
 
 # Daily backtest
-start_date = date(2006, 1, 1)
+start_date = date(2010, 1, 1)
 end_date = date(2024, 8, 31)
 
 # Load historical dataset
@@ -19,7 +19,7 @@ historical_data = (
         end_date=end_date,
     )
     .load_all()
-    .select(["date", "permno", "ret"])
+    .select(["date", "permno", "ret", "prc"])
 )
 
 # Create backtest instance

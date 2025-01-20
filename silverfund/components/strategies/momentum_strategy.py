@@ -23,8 +23,15 @@ class MomentumStrategy(Strategy):
             .alias("mom")
         )
 
-        # Drop all null rows
-        chunk = chunk.drop_nulls()
+        # Filters
+
+        # Price greater than 5
+        chunk = chunk.with_columns(pl.col("prc").shift(1).over("permno").alias("prclag"))
+
+        chunk = chunk.filter(pl.col("prclag") > 5)
+
+        # Non-null momentum
+        chunk = chunk.drop_nulls(subset="mom")
 
         # If there isn't enough data return an empty portfolio
         if len(chunk) < 10:

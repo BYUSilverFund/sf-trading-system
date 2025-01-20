@@ -59,8 +59,8 @@ class Backtester:
             pnl.with_columns(pl.col("weighted_ret_mean").alias("portfolio_ret"))
             .with_columns(pl.col("portfolio_ret").log1p().alias("portfolio_logret"))
             .with_columns(
-                ((pl.col("portfolio_ret") + 1).cum_prod() - 1).alias("cumprod"),
-                pl.col("portfolio_logret").cum_sum().alias("cumsum"),
+                ((pl.col("portfolio_ret") + 1).cum_prod() - 1).alias("cumprod") * 100,
+                pl.col("portfolio_logret").cum_sum().alias("cumsum") * 100,
             )
         )
 

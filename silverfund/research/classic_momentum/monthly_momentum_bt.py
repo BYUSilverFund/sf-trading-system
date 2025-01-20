@@ -19,7 +19,7 @@ historical_data = (
         end_date=end_date,
     )
     .load_all()
-    .select(["date", "permno", "ret"])
+    .select(["date", "permno", "ticker", "ret", "prc"])
 )
 
 # Create backtest instance
@@ -36,12 +36,18 @@ pnl = bt.run()
 
 # Table
 print("\n" + "-" * 50 + " Backtest P&L " + "-" * 50)
+
+min_date = pnl["date"].min().strftime("%Y-%m-%d")
+max_date = pnl["date"].max().strftime("%Y-%m-%d")
+
+print(f"From {min_date} to {max_date}")
+
 print(pnl)
 
 # Chart
+plt.figure(figsize=(10, 6))
 sns.lineplot(data=pnl, x="date", y="cumsum")
-plt.ylabel("Cummulative returns (sum)")
-plt.xlabel("Date")
-plt.xticks(rotation=45)
+plt.ylabel("Cummulative Sum Returns (%)")
+plt.xlabel(None)
 plt.tight_layout()
 plt.show()

@@ -1,3 +1,5 @@
+from datetime import date
+
 import exchange_calendars as ecals
 import polars as pl
 from tqdm import tqdm
@@ -30,13 +32,16 @@ class ChunkedData:
         )
 
         chunks = []
-        for i in tqdm(range(window, len(schedule)), desc="Chunking data"):
+        for i in tqdm(range(window, len(schedule) + 1), desc="Chunking data"):
 
-            start_date = schedule[i - window]
-            end_date = schedule[i - 1]
+            start_date: date = schedule[i - window]
 
-            chunk = data.filter((pl.col("date") >= start_date) & (pl.col("date") <= end_date))
+            if interval == Interval.MONTHLY:
+                start_date = start_date.replace(day=1)
 
+            end_date: date = schedule[i - 1]
+
+            chunk = data.filter(pl.col("date").is_between(start_date, end_date))
             chunks.append(chunk)
 
         self._chunks: list[pl.DataFrame] = chunks
