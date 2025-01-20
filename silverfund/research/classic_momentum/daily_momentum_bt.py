@@ -10,7 +10,7 @@ from silverfund.datasets import CRSPDaily
 
 # Daily backtest
 start_date = date(2010, 1, 1)
-end_date = date(2024, 8, 31)
+end_date = date(2015, 12, 31)
 
 # Load historical dataset
 historical_data = (
@@ -19,7 +19,7 @@ historical_data = (
         end_date=end_date,
     )
     .load_all()
-    .select(["date", "permno", "ret", "prc"])
+    .select(["date", "permno", "ticker", "ret", "prc"])
 )
 
 # Create backtest instance
@@ -36,12 +36,17 @@ pnl = bt.run()
 
 # Table
 print("\n" + "-" * 50 + " Backtest P&L " + "-" * 50)
+
+min_date = pnl["date"].min().strftime("%Y-%m-%d")
+max_date = pnl["date"].max().strftime("%Y-%m-%d")
+
+print(f"From {min_date} to {max_date}")
+
 print(pnl)
 
 # Chart
 sns.lineplot(data=pnl, x="date", y="cumsum")
-plt.ylabel("Cummulative returns (sum)")
-plt.xlabel("Date")
-plt.xticks(rotation=45)
+plt.ylabel("Cummulative Returns Sum (%)")
+plt.xlabel(None)
 plt.tight_layout()
 plt.show()
