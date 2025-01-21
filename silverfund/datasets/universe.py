@@ -33,9 +33,6 @@ class Universe:
         # Cast types
         df = df.with_columns(pl.col("date").dt.date())
 
-        # Filter
-        df = df.filter(pl.col("date").is_between(self._start_date, self._end_date))
-
         # Drop null barrids
         df = df.drop_nulls(subset=["barrid"])
 
@@ -70,7 +67,15 @@ class Universe:
         return merge
 
     def load(self) -> pl.DataFrame:
-        return self._merge()
+        df = self._merge()
+
+        # Filter
+        df = df.filter(pl.col("date").is_between(self._start_date, self._end_date), pl.col("in_universe"))
+
+        # Drop in_universe column
+        df = df.drop("in_universe")
+
+        return df
 
 
 if __name__ == "__main__":

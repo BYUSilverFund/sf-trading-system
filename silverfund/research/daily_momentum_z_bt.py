@@ -19,7 +19,7 @@ historical_data = (
         end_date=end_date,
     )
     .load_all()
-    .select(["date", "permno", "barrid", "ticker", "ret", "prc", "total_risk"])
+    .select(["date", "barrid", "ret", "price", "total_risk"])
 )
 
 # Create backtest instance

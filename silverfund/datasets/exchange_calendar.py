@@ -12,8 +12,6 @@ class ExchangeCalendar:
         self._start_date = pd.Timestamp(start_date) if start_date else pd.Timestamp(2006, 1, 1, 0)  # min date in exchange calendars package
         self._end_date = pd.Timestamp(end_date) if end_date else pd.Timestamp.now().normalize()
 
-        print(self._start_date, self._end_date)
-
         # Load calendar
         nyse = xcals.get_calendar("XNYS")
         schedule = nyse.sessions_in_range(self._start_date, self._end_date).to_list()

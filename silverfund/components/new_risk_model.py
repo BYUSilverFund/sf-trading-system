@@ -3,32 +3,22 @@ from datetime import date
 import numpy as np
 import polars as pl
 
-from silverfund.datasets import BarraFactorCovariances, BarraFactorExposures, BarraSpecificRiskForecast, Master
+from silverfund.datasets import BarraFactorCovariances, BarraFactorExposures, BarraSpecificRiskForecast, Universe
 
 
 class NewRiskModel:
 
     def __init__(self, date_: date) -> None:
         self._date = date_
-        self._get_unique_universe()
+        self._get_universe()
 
-    def _get_unique_universe(self) -> pl.DataFrame:
-        # Load all necessary datasets
-        master = Master(self._date, self._date).load_all()
-        bfe = BarraFactorExposures().load(self._date.year, self._date)
-        bsrf = BarraSpecificRiskForecast().load(self._date.year, self._date)
+    def _get_universe(self) -> pl.DataFrame:
+        # Load
+        universe = Universe(self._date, self._date).load().select("barrid")
+        self._universe = universe
 
-        # Get each set of unique barrids
-        master_ids = master.select("barrid").unique()
-        bfe_ids = bfe.select("barrid").unique()
-        bsrf_ids = bsrf.select("barrid").unique()
-
-        # Find the ineer join of all id lists
-        universe = master_ids.join(bfe_ids, on="barrid", how="inner")
-        universe = universe.join(bsrf_ids, on="barrid", how="inner")
-
-        # Sort and return
-        self._universe = universe.sort(by="barrid")["barrid"].to_list()
+        # Sort and convert to list
+        self._barrids = universe.sort(by="barrid")["barrid"].to_list()
 
     def _covariance_matrix(self) -> pl.DataFrame:
         # Load
@@ -63,7 +53,7 @@ class NewRiskModel:
         bfe = BarraFactorExposures().load(self._date.year, self._date)
 
         # Filter
-        bfe = bfe.filter(pl.col("barrid").is_in(self._universe))
+        bfe = bfe.filter(pl.col("barrid").is_in(self._barrids))
 
         # Pivot
         exp_mat = bfe.pivot(on="factor", index="barrid", values="exposure")
@@ -82,7 +72,7 @@ class NewRiskModel:
         bsrf = BarraSpecificRiskForecast().load(self._date.year, self._date)
 
         # Filter
-        bsrf = bsrf.filter(pl.col("barrid").is_in(self._universe))
+        bsrf = bsrf.filter(pl.col("barrid").is_in(self._barrids))
 
         # Convert vector to diagonal matrix
         diagonal = np.power(np.diag(bsrf["specificrisk"]), 2)
@@ -90,15 +80,14 @@ class NewRiskModel:
         # Package
         risk_matrix = pl.DataFrame(
             {
-                "barrid": self._universe,
-                **{id: diagonal[:, i] for i, id in enumerate(self._universe)},
+                "barrid": self._barrids,
+                **{id: diagonal[:, i] for i, id in enumerate(self._barrids)},
             }
         )
 
         return risk_matrix
 
     def load(self) -> pl.DataFrame:
-        # Cast to numpy matrices
         exposures_matrix = self._exposures_matrix().drop("barrid").to_numpy()
         covariance_matrix = self._covariance_matrix().drop("factor_1").to_numpy()
         idio_risk_matrix = self._idio_risk_matrix().drop("barrid").to_numpy()
@@ -109,8 +98,8 @@ class NewRiskModel:
         # Package
         risk_model = pl.DataFrame(
             {
-                "barrid": self._universe,
-                **{id: risk_model[:, i] for i, id in enumerate(self._universe)},
+                "barrid": self._barrids,
+                **{id: risk_model[:, i] for i, id in enumerate(self._barrids)},
             }
         )
 
@@ -118,6 +107,6 @@ class NewRiskModel:
 
 
 if __name__ == "__main__":
-    date_ = date(2024, 1, 2)
+    date_ = date(2024, 1, 4)
     nrm = NewRiskModel(date_=date_).load()
     print(nrm)

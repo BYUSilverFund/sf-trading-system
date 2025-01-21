@@ -25,21 +25,20 @@ class MomentumZStrategy(Strategy):
         # Filters
 
         # Price greater than 5
-        chunk = chunk.with_columns(pl.col("prc").shift(1).over("barrid").alias("prclag"))
+        chunk = chunk.with_columns(pl.col("price").shift(1).over("barrid").alias("pricelag"))
 
-        chunk = chunk.filter(pl.col("prclag") > 5)
+        chunk = chunk.filter(pl.col("pricelag") > 5)
 
         # Non-null momentum
         chunk = chunk.drop_nulls(subset="mom")
 
-        print(chunk)
         return chunk
 
     def compute_score(self, chunk: pl.DataFrame) -> pl.DataFrame:
         chunk = self.compute_signal(chunk)
 
         chunk = chunk.with_columns(((pl.col("mom") - pl.col("mom").mean()) / pl.col("mom").std()).alias("score"))
-        print(chunk)
+
         return chunk
 
     def compute_alpha(self, chunk: pl.DataFrame) -> pl.DataFrame:
@@ -49,33 +48,32 @@ class MomentumZStrategy(Strategy):
 
         chunk = chunk.with_columns((pl.col("total_risk") * pl.col("mom") * ic).alias("alpha"))
 
-        print(chunk)
         return chunk
 
     def compute_portfolio(self, chunk: pl.DataFrame) -> list[pl.DataFrame]:
         chunk = self.compute_alpha(chunk)
-        date_ = chunk["date"].max()
+        date_ = chunk["date"].max().strftime("%Y-%m-%d")
 
         # Load
         covariance_matrix = NewRiskModel(date_).load()
+        alphas = chunk.select(["barrid", "alpha"])
 
-        # Get barrids
-        barrids = covariance_matrix["barrid"].to_list()
-        print(len(barrids))
+        # # Filter
+        # barrids = alphas.select('barrid').join(covariance_matrix.select('barrid'), on='barrid', how='inner')['barrid'].to_list()
 
-        # Convert to numpy matrix
+        # covariance_matrix = covariance_matrix.select(['barrid'] + barrids)
+        # covariance_matrix = covariance_matrix.filter(pl.col('barrid').is_in(barrids))
+        # alphas = alphas.filter(pl.col('barrid').is_in(barrids))
+
+        # Convert to numpy matrix and vecotr
         covariance_matrix = covariance_matrix.drop("barrid").to_numpy()
+        alphas = alphas["alpha"].to_numpy()
 
-        # Filter
-        chunk = chunk.filter(pl.col("barrid").is_in(barrids))
-
-        print(chunk.group_by("barrid").len())
-
-        alphas = chunk["alpha"].to_numpy()
-
+        # Optimize
         weights = qp(alphas, covariance_matrix)
 
-        portfolio = chunk.with_columns(pl.Series(weights).alias("weights")).select(["date", "barrid", "ticker", "weight"])
+        # Package portfolio
+        portfolio = chunk.with_columns(pl.Series(weights).alias("weights")).select(["date", "barrid", "weight"])
 
         print(portfolio)
         return portfolio
