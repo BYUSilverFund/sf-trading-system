@@ -29,7 +29,18 @@ class CRSPDaily:
         return self.clean(pl.read_parquet(self._folder / file))
 
     def load_all(self) -> pl.DataFrame:
-        return self.clean(pl.read_parquet(self._master_file))
+
+        # Join all yearly files
+        years = range(self._start_date.year, self._end_date.year + 1)
+
+        dfs = []
+        for year in years:
+            file = f"dsf_{year}.parquet"
+            dfs.append(pl.read_parquet(self._folder / file))
+
+        df = pl.concat(dfs)
+
+        return self.clean(df)
 
     def get_all_years(self) -> list[int]:
         years = []
