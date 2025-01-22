@@ -3,22 +3,15 @@ from datetime import date
 import numpy as np
 import polars as pl
 
-from silverfund.datasets import BarraFactorCovariances, BarraFactorExposures, BarraSpecificRiskForecast, Universe
+from silverfund.datasets import BarraFactorCovariances, BarraFactorExposures, BarraSpecificRiskForecast, MasterMonthly
 
 
 class NewRiskModel:
+    """An instance of the risk model is for a single date and filtered on a list of barrids"""
 
-    def __init__(self, date_: date) -> None:
+    def __init__(self, date_: date, barrids: list[str]) -> None:
         self._date = date_
-        self._get_universe()
-
-    def _get_universe(self) -> pl.DataFrame:
-        # Load
-        universe = Universe(self._date, self._date).load().select("barrid")
-        self._universe = universe
-
-        # Sort and convert to list
-        self._barrids = universe.sort(by="barrid")["barrid"].to_list()
+        self._barrids = sorted(barrids)
 
     def _covariance_matrix(self) -> pl.DataFrame:
         # Load
@@ -45,6 +38,9 @@ class NewRiskModel:
                 **{col: cov_mat[:, idx] for idx, col in enumerate(factors)},
             }
         )
+
+        # Fill NaN values
+        cov_mat = cov_mat.fill_nan(0)
 
         return cov_mat
 
@@ -88,6 +84,7 @@ class NewRiskModel:
         return risk_matrix
 
     def load(self) -> pl.DataFrame:
+        # Load
         exposures_matrix = self._exposures_matrix().drop("barrid").to_numpy()
         covariance_matrix = self._covariance_matrix().drop("factor_1").to_numpy()
         idio_risk_matrix = self._idio_risk_matrix().drop("barrid").to_numpy()
@@ -107,6 +104,9 @@ class NewRiskModel:
 
 
 if __name__ == "__main__":
-    date_ = date(2024, 1, 4)
-    nrm = NewRiskModel(date_=date_).load()
+    date_ = date(2023, 12, 29)
+    master = MasterMonthly(start_date=date_, end_date=date_).load_all()
+    barrids = master["barrid"].unique().sort()
+
+    nrm = NewRiskModel(date_=date_, barrids=barrids).load()
     print(nrm)

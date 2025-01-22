@@ -23,13 +23,7 @@ historical_data = (
 )
 
 # Create backtest instance
-bt = Backtester(
-    start_date=start_date,
-    end_date=end_date,
-    interval=Interval.DAILY,
-    historical_data=historical_data,
-    strategy=MomentumStrategy,
-)
+bt = Backtester(start_date=start_date, end_date=end_date, interval=Interval.DAILY, historical_data=historical_data, strategy=MomentumStrategy, security_identifier="permno")
 
 # Run backtest
 pnl = bt.run()
@@ -49,4 +43,8 @@ sns.lineplot(data=pnl, x="date", y="cumsum")
 plt.ylabel("Cummulative Returns Sum (%)")
 plt.xlabel(None)
 plt.tight_layout()
-plt.show()
+
+results_folder = "/Users/andrew/Projects/SilverFund/sf-trading-system/silverfund/research/classic_momentum/results"
+
+pnl.write_parquet(f"{results_folder}/daily_momentum_bt.parquet")
+plt.savefig(f"{results_folder}/daily_momentum_bt.png")
