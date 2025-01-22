@@ -9,8 +9,8 @@ from silverfund.components.strategies.momentum_strategy import MomentumStrategy
 from silverfund.datasets import CRSPDaily
 
 # Daily backtest
-start_date = date(2010, 1, 1)
-end_date = date(2015, 12, 31)
+start_date = date(2016, 1, 1)
+end_date = date(2024, 12, 31)
 
 # Load historical dataset
 historical_data = (
@@ -39,8 +39,9 @@ print(f"From {min_date} to {max_date}")
 print(pnl)
 
 # Chart
+plt.figure(figsize=(10, 6))
 sns.lineplot(data=pnl, x="date", y="cumsum")
-plt.ylabel("Cummulative Returns Sum (%)")
+plt.ylabel("Cummulative Sum Returns (%)")
 plt.xlabel(None)
 plt.tight_layout()
 
