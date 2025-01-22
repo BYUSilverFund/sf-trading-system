@@ -21,6 +21,8 @@ class MasterMonthly:
         barra_returns = self._barra_returns()
         barra_risk = self._barra_risk()
 
+        print(russell.filter(pl.col("date").is_between(date(2012, 7, 1), date(2012, 7, 31))))
+
         # Merge 1
         if not quiet:
             print("Joining Russell + Barra Returns = Master")
@@ -164,6 +166,6 @@ class MasterMonthly:
 
 
 if __name__ == "__main__":
-    master = MasterMonthly(start_date=date(2020, 1, 1), end_date=date(2024, 12, 31), quiet=False).load_all()
+    master = MasterMonthly(start_date=date(2012, 1, 1), end_date=date(2012, 12, 31), quiet=False).load_all()
 
-    print(master)
+    print(master.filter(pl.col("date").is_between(date(2012, 7, 1), date(2012, 7, 31))))

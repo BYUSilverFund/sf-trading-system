@@ -9,7 +9,7 @@ from silverfund.components.strategies.momentum_z_strategy import MomentumZStrate
 from silverfund.datasets import MasterMonthly
 
 # Daily backtest
-start_date = date(2007, 1, 1)
+start_date = date(2011, 6, 1)  # date(2007, 6, 1)
 end_date = date(2024, 12, 31)
 
 # Load historical dataset
@@ -44,6 +44,7 @@ max_date = pnl["date"].max().strftime("%Y-%m-%d")
 print(f"From {min_date} to {max_date}")
 print(pnl)
 
+
 # Chart
 sns.lineplot(data=pnl, x="date", y="cumsum")
 plt.ylabel("Cummulative Returns Sum (%)")
@@ -51,4 +52,6 @@ plt.xlabel(None)
 plt.tight_layout()
 
 results_folder = "/Users/andrew/Projects/SilverFund/sf-trading-system/silverfund/research/optimized_momentum/results"
+
+pnl.write_parquet(f"{results_folder}//monthly_optimized_momentum_bt.parquet")
 plt.savefig(f"{results_folder}/monthly_optimized_momentum_bt.png")
