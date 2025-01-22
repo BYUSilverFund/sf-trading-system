@@ -14,8 +14,10 @@ class BarraReturns:
 
         load_dotenv()
 
-        user = os.getenv("ROOT").split("/")[2]
-        root_dir = Path(f"/home/{user}")
+        parts = os.getenv("ROOT").split("/")
+        home = parts[1]
+        user = parts[2]
+        root_dir = Path(f"/{home}/{user}")
 
         self._folder = root_dir / "groups" / "grp_quant" / "data" / "barra_usslow_ret"
         self._files = os.listdir(self._folder)
@@ -41,14 +43,17 @@ class BarraReturns:
         df = df.drop("__index_level_0__")
 
         # Cast and rename date
-        df = df.with_columns(pl.col("DataDate").dt.date().alias("Date")).drop("DataDate")
+        df = df.with_columns(pl.col("DataDate").dt.date().alias("date")).drop("DataDate")
+
+        # Lowercase columns
+        df = df.rename({col: col.lower() for col in df.columns})
 
         # Reorder columns
         df = df.select(
-            ["Date", "Barrid"] + [col for col in df.columns if col not in ["Date", "Barrid"]]
+            ["date", "barrid"] + [col for col in df.columns if col not in ["date", "barrid"]]
         )
 
         # Sort
-        df = df.sort(by=["Date", "Barrid"])
+        df = df.sort(by=["barrid", "date"])
 
         return df

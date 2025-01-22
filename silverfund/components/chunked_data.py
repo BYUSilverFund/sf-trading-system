@@ -1,3 +1,5 @@
+from datetime import date
+
 import exchange_calendars as ecals
 import polars as pl
 from tqdm import tqdm
@@ -7,7 +9,7 @@ from silverfund.components.strategies.strategy import Strategy
 
 
 class ChunkedData:
-    def __init__(self, data: pl.DataFrame, interval: Interval, window: int, columns: list[str]):
+    def __init__(self, data: pl.DataFrame, interval: Interval, window: int):
         min_date = data["date"].min()
         max_date = data["date"].max()
 
@@ -21,6 +23,7 @@ class ChunkedData:
 
         if interval == Interval.MONTHLY:
             schedule = schedule.with_columns(pl.col("date").dt.truncate("1mo")).unique()
+            schedule = schedule.with_columns(pl.col("date").dt.month_end())
 
         schedule = (
             schedule.filter(pl.col("date") >= min_date, pl.col("date") <= max_date)
@@ -29,16 +32,16 @@ class ChunkedData:
         )
 
         chunks = []
-
         for i in tqdm(range(window, len(schedule) + 1), desc="Chunking data"):
 
-            start_date = schedule[i - window]
-            end_date = schedule[i - 1]
+            start_date: date = schedule[i - window]
 
-            chunk = data.filter(
-                (pl.col("date") >= start_date) & (pl.col("date") <= end_date)
-            ).select(columns)
+            if interval == Interval.MONTHLY:
+                start_date = start_date.replace(day=1)
 
+            end_date: date = schedule[i - 1]
+
+            chunk = data.filter(pl.col("date").is_between(start_date, end_date))
             chunks.append(chunk)
 
         self._chunks: list[pl.DataFrame] = chunks

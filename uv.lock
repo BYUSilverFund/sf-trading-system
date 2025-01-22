@@ -350,7 +350,7 @@ wheels = [
 
 [[package]]
 name = "exchange-calendars"
-version = "4.7"
+version = "4.8"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "korean-lunar-calendar" },
@@ -360,9 +360,9 @@ dependencies = [
     { name = "toolz" },
     { name = "tzdata" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/42/9c/e9172ca353f9936215fe140179e8bbad230506f25996ec30570785838bd4/exchange_calendars-4.7.tar.gz", hash = "sha256:e8e202b139867ca5a5523d8ddee56cf9aa4610483214a3c79f3ea5bb5efb3276", size = 3804188 }
+sdist = { url = "https://files.pythonhosted.org/packages/38/78/1802680e9ea575712411a8aa4bd2979c0cea510a007816fe88dbdc72199b/exchange_calendars-4.8.tar.gz", hash = "sha256:70d1f2dce712fb193aa56f67df17a292221a4c24589a0077fac3f41aaf5e0a29", size = 3854982 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/37/c6/5816a438bdbee6adc5f7096d8b8aa4c692f4d1471d52da84f428ee4ab033/exchange_calendars-4.7-py3-none-any.whl", hash = "sha256:460208317ee123f180ba50b3df2951d347bbce042546909f0fdb3d1521ad8bc4", size = 196894 },
+    { url = "https://files.pythonhosted.org/packages/51/f4/c4762d034eecf246d1f836dcb9d51e126c5f008833ebbb987905fa03bac6/exchange_calendars-4.8-py3-none-any.whl", hash = "sha256:98990e1419e6379c22c19e8dff31ab0abf59a0841c24d21953f731b50b4125f9", size = 197757 },
 ]
 
 [[package]]
@@ -1619,7 +1619,7 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "cvxpy", specifier = ">=1.6.0" },
-    { name = "exchange-calendars", specifier = ">=4.7" },
+    { name = "exchange-calendars", specifier = ">=4.8" },
     { name = "gdown", specifier = ">=5.2.0" },
     { name = "ibapi", specifier = ">=9.81.1.post1" },
     { name = "ipykernel", specifier = ">=6.29.5" },
