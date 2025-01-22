@@ -5,8 +5,8 @@ import seaborn as sns
 
 from silverfund.backtester import Backtester
 from silverfund.components.enums import Interval
-from silverfund.components.strategies.momentum_strategy import MomentumStrategy
-from silverfund.datasets import CRSPMonthly
+from silverfund.components.strategies.reversal_strategy import ReversalStrategy
+from silverfund.datasets import CRSPDaily
 
 # Monthly backtest
 start_date = date(2006, 1, 1)
@@ -14,7 +14,7 @@ end_date = date(2024, 8, 31)
 
 # Load historical dataset
 historical_data = (
-    CRSPMonthly(
+    CRSPDaily(
         start_date=start_date,
         end_date=end_date,
     )
@@ -23,7 +23,7 @@ historical_data = (
 )
 
 # Create backtest instance
-bt = Backtester(start_date=start_date, end_date=end_date, interval=Interval.MONTHLY, historical_data=historical_data, strategy=MomentumStrategy, security_identifier="permno")
+bt = Backtester(start_date=start_date, end_date=end_date, interval=Interval.DAILY, historical_data=historical_data, strategy=ReversalStrategy, security_identifier="permno")
 
 # Run backtest
 pnl = bt.run()
@@ -45,7 +45,7 @@ plt.ylabel("Cummulative Sum Returns (%)")
 plt.xlabel(None)
 plt.tight_layout()
 
-results_folder = "/Users/andrew/Projects/SilverFund/sf-trading-system/silverfund/research/classic_momentum/results"
+results_folder = "/Users/andrew/Projects/SilverFund/sf-trading-system/silverfund/research/classic_reversal/results"
 
-pnl.write_parquet(f"{results_folder}/monthly_momentum_bt.parquet")
-plt.savefig(f"{results_folder}/monthly_momentum_bt.png")
+pnl.write_parquet(f"{results_folder}/daily_reversal_bt.parquet")
+plt.savefig(f"{results_folder}/daily_reversal_bt.png")

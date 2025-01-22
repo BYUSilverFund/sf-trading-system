@@ -6,36 +6,41 @@ from silverfund.components.strategies.strategy import Strategy
 
 
 class ReversalStrategy(Strategy):
-    def __init__(self, interval: Interval) -> None:
+    def __init__(self, interval: Interval):
         self._interval = interval
-        self._window = {
-            Interval.MONTHLY: 2,
-            Interval.WEEKLY: 24,
-            Interval.DAILY: 24,
-        }[self._interval]
+        self._window = {Interval.DAILY: 23, Interval.MONTHLY: 2}[self._interval]
+        self._rolling_window = {Interval.DAILY: 22, Interval.MONTHLY: 1}[self._interval]
+        self._skip = {Interval.DAILY: 1, Interval.MONTHLY: 1}[self._interval]
 
     def compute_portfolio(self, chunk: pl.DataFrame) -> list[pl.DataFrame]:
 
-        # Signal transformation
+        # Reversal signal formation
         chunk = chunk.with_columns(pl.col("ret").log1p().alias("logret")).with_columns(
-            pl.col("logret")
-            .rolling_sum(window_size=self._window - 1, min_periods=self._window - 1, center=False)
-            .shift(1)  # Lag signal
-            .over("ticker")
-            .alias("rev")
+            pl.col("logret").rolling_sum(window_size=self._rolling_window, min_periods=self._rolling_window, center=False).over("permno").alias("rev")
         )
 
-        chunk = chunk.drop_nulls()
+        # Reversal lag/skip
+        chunk = chunk.with_columns(pl.col("rev").shift(self._skip).over("permno"))
 
+        # Filters
+
+        # Price greater than 5
+        chunk = chunk.with_columns(pl.col("prc").shift(1).over("permno").alias("prclag"))
+
+        chunk = chunk.filter(pl.col("prclag") > 5)
+
+        # Non-null reversal
+        chunk = chunk.drop_nulls(subset="rev")
+
+        # If there isn't enough data return an empty portfolio
         if len(chunk) < 10:
             return pl.DataFrame()
 
+        # Generate portfolios
         portfolios = decile_portfolio(chunk, "rev", Weighting.EQUAL)
 
-        # Long poor reversal, short good reversal
-        long_short_portfolio = pl.concat(
-            [portfolios[0], portfolios[9].with_columns(pl.col("weight") * -1)]
-        ).drop(["bin", "rev"])
+        # Long negative reversal, short positive reversal
+        long_short_portfolio = pl.concat([portfolios[9].with_columns(pl.col("weight") * -1), portfolios[0]]).drop(["bin", "rev"])
 
         return long_short_portfolio
 
