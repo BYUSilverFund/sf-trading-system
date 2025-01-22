@@ -30,7 +30,8 @@ VERBOSE_LEVEL = 0 if not VERBOSE else VERBOSE_LEVEL
 
 # Directory to all datafiles
 USER = os.getenv("ROOT").split("/")[2]
-ROOT_DIR = f"/home/{USER}"
+HOME = os.getenv("ROOT").split("/")[1]
+ROOT_DIR = f"/{HOME}/{USER}"
 FULTON_DATA_DIR = ROOT_DIR + "/groups/"
 
 # Compiled Data Directory

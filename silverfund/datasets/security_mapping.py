@@ -14,8 +14,10 @@ class SecurityMapping:
 
         load_dotenv()
 
-        user = os.getenv("ROOT").split("/")[2]
-        root_dir = Path(f"/home/{user}")
+        parts = os.getenv("ROOT").split("/")
+        home = parts[1]
+        user = parts[2]
+        root_dir = Path(f"/{home}/{user}")
 
         self._file_path = root_dir / "groups" / "grp_quant" / "data" / "usslow_ids.parquet"
 
