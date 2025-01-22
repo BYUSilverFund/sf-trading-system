@@ -42,17 +42,13 @@ class Backtester:
         portfolios = pl.concat(portfolios)
 
         # Join historical data and portfolios
-        merged = self.historical_data.join(portfolios, how="inner", on=["date", "permno"])
+        merged = self.historical_data.join(portfolios, how="inner", on=["date", "barrid"])
 
         # Calculate weighted returns
         merged = merged.with_columns((pl.col("weight") * pl.col("ret")).alias("weighted_ret"))
 
         # Calculte portfolio pnl
-        pnl = (
-            merged.group_by("date")
-            .agg(weighted_ret_mean=pl.col("weighted_ret").sum(), n_assets=pl.col("date").count())
-            .sort(by=["date"])
-        )
+        pnl = merged.group_by("date").agg(weighted_ret_mean=pl.col("weighted_ret").sum(), n_assets=pl.col("date").count()).sort(by=["date"])
 
         # Calculate portfolio cummulative returns
         pnl = (

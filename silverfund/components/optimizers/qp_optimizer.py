@@ -18,7 +18,7 @@ def qp(alphas: np.ndarray, covariance_matrix: np.ndarray, gamma: float = 2.0):
     objective = cp.Maximize(portfolio_alpha - 0.5 * gamma * portfolio_variance)
 
     # Constraints
-    constraints = []
+    constraints = [weights >= 0]
 
     # Formulate problem
     problem = cp.Problem(objective=objective, constraints=constraints)

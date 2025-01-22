@@ -26,10 +26,10 @@ class MasterMonthly:
             print("Joining Russell + Barra Returns = Master")
         self.df = russell.join(barra_returns, on=["barrid", "date"], how="inner")
 
-        # # Merge 2
-        # if not quiet:
-        #     print("Joining Master + Barra Risk = Master")
-        # self.df = self.df.join(barra_risk, on=["barrid", "date"], how="inner")
+        # Merge 2
+        if not quiet:
+            print("Joining Master + Barra Risk = Master")
+        self.df = self.df.join(barra_risk, on=["barrid", "date"], how="inner")
 
         # Sort
         self.df = self.df.sort(by=["barrid", "date"])

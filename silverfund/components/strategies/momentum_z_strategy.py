@@ -22,13 +22,6 @@ class MomentumZStrategy(Strategy):
         # Momentum lag/skip
         chunk = chunk.with_columns(pl.col("mom").shift(self._skip).over("barrid"))
 
-        # Filters
-
-        # Price greater than 5
-        chunk = chunk.with_columns(pl.col("price").shift(1).over("barrid").alias("pricelag"))
-
-        chunk = chunk.filter(pl.col("pricelag") > 5)
-
         # Non-null momentum
         chunk = chunk.drop_nulls(subset="mom")
 
@@ -52,18 +45,12 @@ class MomentumZStrategy(Strategy):
 
     def compute_portfolio(self, chunk: pl.DataFrame) -> list[pl.DataFrame]:
         chunk = self.compute_alpha(chunk)
-        date_ = chunk["date"].max().strftime("%Y-%m-%d")
+        date_ = chunk["date"].max()
+        barrids = chunk["barrid"].unique().to_list()
 
         # Load
-        covariance_matrix = NewRiskModel(date_).load()
+        covariance_matrix = NewRiskModel(date_, barrids).load()
         alphas = chunk.select(["barrid", "alpha"])
-
-        # # Filter
-        # barrids = alphas.select('barrid').join(covariance_matrix.select('barrid'), on='barrid', how='inner')['barrid'].to_list()
-
-        # covariance_matrix = covariance_matrix.select(['barrid'] + barrids)
-        # covariance_matrix = covariance_matrix.filter(pl.col('barrid').is_in(barrids))
-        # alphas = alphas.filter(pl.col('barrid').is_in(barrids))
 
         # Convert to numpy matrix and vecotr
         covariance_matrix = covariance_matrix.drop("barrid").to_numpy()
@@ -73,9 +60,8 @@ class MomentumZStrategy(Strategy):
         weights = qp(alphas, covariance_matrix)
 
         # Package portfolio
-        portfolio = chunk.with_columns(pl.Series(weights).alias("weights")).select(["date", "barrid", "weight"])
+        portfolio = chunk.with_columns(pl.Series(weights).alias("weight")).select(["date", "barrid", "weight"])
 
-        print(portfolio)
         return portfolio
 
     @property
