@@ -6,7 +6,7 @@ import seaborn as sns
 from silverfund.backtester import Backtester
 from silverfund.components.enums import Interval
 from silverfund.components.strategies.momentum_z_strategy import MomentumZStrategy
-from silverfund.datasets import Master
+from silverfund.datasets import MasterMonthly
 
 # Daily backtest
 start_date = date(2020, 1, 1)
@@ -14,7 +14,7 @@ end_date = date(2020, 12, 31)
 
 # Load historical dataset
 historical_data = (
-    Master(
+    MasterMonthly(
         start_date=start_date,
         end_date=end_date,
     )
