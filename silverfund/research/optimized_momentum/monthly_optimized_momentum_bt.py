@@ -49,4 +49,6 @@ sns.lineplot(data=pnl, x="date", y="cumsum")
 plt.ylabel("Cummulative Returns Sum (%)")
 plt.xlabel(None)
 plt.tight_layout()
-plt.savefig("monthly_momentum_z_bt.png")
+
+results_folder = "/Users/andrew/Projects/SilverFund/sf-trading-system/silverfund/research/optimized_momentum/results"
+plt.savefig(f"{results_folder}/monthly_optimized_momentum_bt.png")
