@@ -1,6 +1,5 @@
 from datetime import date
 
-import exchange_calendars as xcals
 import polars as pl
 from tqdm import tqdm
 
@@ -20,8 +19,6 @@ class MasterMonthly:
         russell = self._russell()
         barra_returns = self._barra_returns()
         barra_risk = self._barra_risk()
-
-        print(russell.filter(pl.col("date").is_between(date(2012, 7, 1), date(2012, 7, 31))))
 
         # Merge 1
         if not quiet:
@@ -166,6 +163,7 @@ class MasterMonthly:
 
 
 if __name__ == "__main__":
-    master = MasterMonthly(start_date=date(2012, 1, 1), end_date=date(2012, 12, 31), quiet=False).load_all()
+    master = MasterMonthly(start_date=date(2017, 1, 1), end_date=date(2017, 12, 31), quiet=False).load_all()
 
-    print(master.filter(pl.col("date").is_between(date(2012, 7, 1), date(2012, 7, 31))))
+    # print(master)
+    print(master.filter(pl.col("date").is_between(date(2017, 10, 1), date(2017, 10, 31))))

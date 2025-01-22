@@ -8,8 +8,8 @@ from silverfund.components.enums import Interval
 from silverfund.components.strategies.momentum_z_strategy import MomentumZStrategy
 from silverfund.datasets import MasterMonthly
 
-# Daily backtest
-start_date = date(2011, 6, 1)  # date(2007, 6, 1)
+# Monthly backtest
+start_date = date(2018, 1, 1)  # Russell is missing 2012-07, and a day early 2017-11-29
 end_date = date(2024, 12, 31)
 
 # Load historical dataset
@@ -46,10 +46,10 @@ print(pnl)
 
 
 # Chart
-sns.lineplot(data=pnl, x="date", y="cumsum")
-plt.ylabel("Cummulative Returns Sum (%)")
+plt.figure(figsize=(10, 6))
+sns.lineplot(pnl, x="date", y="cumprod")
 plt.xlabel(None)
-plt.tight_layout()
+plt.ylabel("Cummulative Product Returns (%)")
 
 results_folder = "/Users/andrew/Projects/SilverFund/sf-trading-system/silverfund/research/optimized_momentum/results"
 
