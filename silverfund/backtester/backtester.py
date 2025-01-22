@@ -43,8 +43,6 @@ class Backtester:
         # Concatenate portfolios
         portfolios = pl.concat(portfolios)
 
-        print(portfolios)
-
         # Join historical data and portfolios
         merged = self.historical_data.join(portfolios, how="inner", on=["date", self._security_identifier])
 

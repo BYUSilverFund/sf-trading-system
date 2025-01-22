@@ -61,7 +61,6 @@ class MomentumZStrategy(Strategy):
 
         # Package portfolio
         portfolio = chunk.with_columns(pl.Series(weights).alias("weight")).select(["date", "barrid", "weight"])
-
         return portfolio
 
     @property
