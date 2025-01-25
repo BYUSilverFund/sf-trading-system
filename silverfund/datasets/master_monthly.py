@@ -5,6 +5,7 @@ from tqdm import tqdm
 
 from silverfund.datasets.barra_returns import BarraReturns
 from silverfund.datasets.barra_risk_forecasts import BarraRiskForecasts
+from silverfund.datasets.barra_specific_returns import BarraSpecificReturns
 from silverfund.datasets.universe import Universe
 
 
@@ -19,16 +20,22 @@ class MasterMonthly:
         universe = self._universe()
         barra_returns = self._barra_returns()
         barra_risk = self._barra_risk()
+        barra_specific_returns = self._barra_specific_returns()
 
         # Merge 1
         if not quiet:
             print("Joining Universe + Barra Returns = Master")
-        self.df = universe.join(barra_returns, on=["barrid", "date"], how="inner")
+        self.df = universe.join(barra_returns, on=["barrid", "date"], how="left")
 
         # Merge 2
         if not quiet:
             print("Joining Master + Barra Risk = Master")
-        self.df = self.df.join(barra_risk, on=["barrid", "date"], how="inner")
+        self.df = self.df.join(barra_risk, on=["barrid", "date"], how="left")
+
+        # Merge 3
+        if not quiet:
+            print("Joining Master + Barra Specific Returns = Master")
+        self.df = self.df.join(barra_specific_returns, on=["barrid", "date"], how="left")
 
         # Sort
         self.df = self.df.sort(by=["barrid", "date"])
@@ -152,9 +159,56 @@ class MasterMonthly:
 
         return df
 
+    def _barra_specific_returns(self) -> pl.DataFrame:
+        dataset = BarraSpecificReturns()
 
-if __name__ == "__main__":
-    master = MasterMonthly(start_date=date(2017, 1, 1), end_date=date(2017, 12, 31), quiet=False).load_all()
+        # Join all yearly datasets
+        years = range(self._start_date.year, self._end_date.year + 1)
 
-    # print(master)
-    print(master.filter(pl.col("date").is_between(date(2017, 10, 1), date(2017, 10, 31))))
+        dfs = []
+        if self._quiet:
+            for year in years:
+                # Load
+                df = dataset.load(year)
+
+                # Clean
+                df = self._clean_barra_risk(df)
+
+                dfs.append(df)
+        else:
+            for year in tqdm(years, desc="Loading Barra Specific Returns"):
+                # Load
+                df = dataset.load(year)
+
+                # Clean
+                df = self._clean_barra_specific_returns(df)
+
+                dfs.append(df)
+
+        dfs = pl.concat(dfs)
+
+        # Filter
+        dfs = dfs.filter(pl.col("date").is_between(self._start_date, self._end_date))
+
+        return dfs
+
+    @staticmethod
+    def _clean_barra_specific_returns(df: pl.DataFrame) -> pl.DataFrame:
+        # Add log_spec_ret column
+        df = df.with_columns(pl.col("spec_ret").log1p().alias("log_spec_ret"))
+
+        # Add month column
+        df = df.with_columns(pl.col("date").dt.truncate("1mo").alias("month")).sort(["barrid", "date"])
+
+        df = df.group_by(["month", "barrid"]).agg(
+            pl.col("date").last(),
+            pl.col("log_spec_ret").sum(),
+        )
+
+        # Compound up log specific returns
+        df = df.with_columns((pl.col("log_spec_ret").exp() - 1).alias("spec_ret"))
+
+        # Drop month and sort
+        df = df.drop("month").sort(["barrid", "date"])
+
+        return df
