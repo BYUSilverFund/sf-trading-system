@@ -5,7 +5,7 @@ from tqdm import tqdm
 
 from silverfund.datasets.barra_returns import BarraReturns
 from silverfund.datasets.barra_risk_forecasts import BarraRiskForecasts
-from silverfund.datasets.russell_constituents import RussellConstituents
+from silverfund.datasets.universe import Universe
 
 
 class MasterMonthly:
@@ -16,14 +16,14 @@ class MasterMonthly:
         self._quiet = quiet
 
         # Load universe, returns, and risk
-        russell = self._russell()
+        universe = self._universe()
         barra_returns = self._barra_returns()
         barra_risk = self._barra_risk()
 
         # Merge 1
         if not quiet:
-            print("Joining Russell + Barra Returns = Master")
-        self.df = russell.join(barra_returns, on=["barrid", "date"], how="inner")
+            print("Joining Universe + Barra Returns = Master")
+        self.df = universe.join(barra_returns, on=["barrid", "date"], how="inner")
 
         # Merge 2
         if not quiet:
@@ -36,20 +36,11 @@ class MasterMonthly:
     def load_all(self):
         return self.df
 
-    def _russell(self):
+    def _universe(self):
         # Load
-        russell = RussellConstituents().load_all()
+        universe = Universe(start_date=self._start_date, end_date=self._end_date).load()
 
-        # Select index columns
-        russell = russell.select(["date", "barrid"]).unique()
-
-        # Drop null barrids
-        russell = russell.drop_nulls(subset=["barrid"])
-
-        # Sort
-        russell = russell.sort(["date", "barrid"])
-
-        return russell
+        return universe
 
     def _barra_returns(self) -> pl.DataFrame:
         dataset = BarraReturns()
