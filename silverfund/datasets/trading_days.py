@@ -9,7 +9,7 @@ from silverfund.datasets.crsp_monthly import CRSPMonthly
 
 class TradingDays:
 
-    def __init__(self, start_date: date, end_date: date, interval: Interval = Interval.MONTHLY) -> None:
+    def __init__(self, start_date: date, end_date: date, interval: Interval = Interval.MONTHLY, quiet: bool = True) -> None:
 
         if interval == Interval.MONTHLY:
 
@@ -17,7 +17,7 @@ class TradingDays:
 
         elif interval == Interval.DAILY:
 
-            crsp = CRSPDaily(start_date=start_date, end_date=end_date).load_all()
+            crsp = CRSPDaily(start_date=start_date, end_date=end_date, quite=quiet).load_all()
 
         self.df = crsp.select("date").unique().sort("date")
 
