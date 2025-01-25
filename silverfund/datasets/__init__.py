@@ -10,6 +10,7 @@ from .exchange_calendar import ExchangeCalendar
 from .master_monthly import MasterMonthly
 from .russell_constituents import RussellConstituents
 from .security_mapping import SecurityMapping
+from .trading_days import TradingDays
 from .universe import Universe
 
 __all__ = [
@@ -26,4 +27,5 @@ __all__ = [
     "MasterMonthly",
     "Universe",
     "ExchangeCalendar",
+    "TradingDays",
 ]

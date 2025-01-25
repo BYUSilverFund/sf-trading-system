@@ -9,8 +9,8 @@ from silverfund.components.strategies.momentum_strategy import MomentumStrategy
 from silverfund.datasets import CRSPMonthly
 
 # Monthly backtest
-start_date = date(2006, 1, 1)
-end_date = date(2024, 8, 31)
+start_date = date(1995, 7, 31)
+end_date = date(2024, 12, 31)
 
 # Load historical dataset
 historical_data = (
