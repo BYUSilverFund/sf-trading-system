@@ -18,7 +18,7 @@ def qp(alphas: np.ndarray, covariance_matrix: np.ndarray, gamma: float = 2.0):
     objective = cp.Maximize(portfolio_alpha - 0.5 * gamma * portfolio_variance)
 
     # Constraints
-    constraints = []
+    constraints = [weights >= -1, weights <= 1, cp.sum(weights) == 1]
 
     # Formulate problem
     problem = cp.Problem(objective=objective, constraints=constraints)
@@ -34,15 +34,11 @@ def qp(alphas: np.ndarray, covariance_matrix: np.ndarray, gamma: float = 2.0):
 
 if __name__ == "__main__":
     # Test data setup
-    assets_data = {"barrid": ["A", "B", "C"], "alpha": [0.1, 0.2, 0.15]}
-    assets = pl.DataFrame(assets_data)
-
+    alphas = np.array([0.1, 0.2, 0.15])
     covariance_matrix_data = np.array([[0.1, 0.02, 0.03], [0.02, 0.1, 0.04], [0.03, 0.04, 0.1]])
 
-    gamma = 2.0
-
     # Run the function
-    weights = qp(assets, covariance_matrix_data, gamma)
+    weights = qp(alphas, covariance_matrix_data)
 
     # Display the result
     print("Optimized Weights:", weights)

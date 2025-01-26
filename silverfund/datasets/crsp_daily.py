@@ -5,11 +5,12 @@ from typing import Optional
 
 import polars as pl
 from dotenv import load_dotenv
+from tqdm import tqdm
 
 
 class CRSPDaily:
 
-    def __init__(self, start_date: Optional[date] = None, end_date: Optional[date] = None) -> None:
+    def __init__(self, start_date: Optional[date] = None, end_date: Optional[date] = None, quite: bool = True) -> None:
         self._start_date = start_date
         self._end_date = end_date or date.today()
 
@@ -34,7 +35,7 @@ class CRSPDaily:
         years = range(self._start_date.year, self._end_date.year + 1)
 
         dfs = []
-        for year in years:
+        for year in tqdm(years, desc="Loading CRSP Daily years"):
             file = f"dsf_{year}.parquet"
             dfs.append(pl.read_parquet(self._folder / file))
 

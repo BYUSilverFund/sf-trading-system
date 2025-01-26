@@ -14,6 +14,7 @@ wheels/
 
 # Data files
 *.csv
+*.parquet
 
 # Super computer scripts
 *.sh

@@ -1,11 +1,11 @@
 from datetime import date
 
-import exchange_calendars as ecals
 import polars as pl
 from tqdm import tqdm
 
 from silverfund.components.enums import Interval
 from silverfund.components.strategies.strategy import Strategy
+from silverfund.datasets.trading_days import TradingDays
 
 
 class ChunkedData:
@@ -13,33 +13,19 @@ class ChunkedData:
         min_date = data["date"].min()
         max_date = data["date"].max()
 
-        nyse = ecals.get_calendar("XNYS")
-        schedule = nyse.sessions_in_range(min_date, max_date).to_list()
-        schedule = (
-            pl.DataFrame(schedule)
-            .rename({"column_0": "date"})
-            .with_columns(pl.col("date").dt.date())
-        )
+        trading_days = TradingDays(start_date=min_date, end_date=max_date, interval=interval, quiet=False).load()
 
-        if interval == Interval.MONTHLY:
-            schedule = schedule.with_columns(pl.col("date").dt.truncate("1mo")).unique()
-            schedule = schedule.with_columns(pl.col("date").dt.month_end())
-
-        schedule = (
-            schedule.filter(pl.col("date") >= min_date, pl.col("date") <= max_date)
-            .sort(by="date")["date"]
-            .to_list()
-        )
+        trading_days = trading_days.filter(pl.col("date") >= min_date, pl.col("date") <= max_date).sort(by="date")["date"].to_list()
 
         chunks = []
-        for i in tqdm(range(window, len(schedule) + 1), desc="Chunking data"):
+        for i in tqdm(range(window, len(trading_days) + 1), desc="Chunking data"):
 
-            start_date: date = schedule[i - window]
+            start_date: date = trading_days[i - window]
 
             if interval == Interval.MONTHLY:
                 start_date = start_date.replace(day=1)
 
-            end_date: date = schedule[i - 1]
+            end_date: date = trading_days[i - 1]
 
             chunk = data.filter(pl.col("date").is_between(start_date, end_date))
             chunks.append(chunk)
