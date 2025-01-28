@@ -1,15 +1,12 @@
 from datetime import date
 
-import matplotlib.pyplot as plt
-import seaborn as sns
-
 from silverfund.backtester import Backtester
 from silverfund.components.enums import Interval
 from silverfund.components.strategies.momentum_z_strategy import MomentumZStrategy
 from silverfund.datasets.master_monthly import MasterMonthly
 
 # Monthly backtest
-start_date = date(1995, 7, 31)  # Russell is missing 2012-07, and a day early 2017-11-29
+start_date = date(1995, 7, 31)
 end_date = date(2024, 12, 31)
 
 # Load historical dataset
@@ -37,13 +34,8 @@ pnl = bt.run()
 
 # Table
 print("\n" + "-" * 50 + " Backtest P&L " + "-" * 50)
-
-min_date = pnl["date"].min().strftime("%Y-%m-%d")
-max_date = pnl["date"].max().strftime("%Y-%m-%d")
-
-print(f"From {min_date} to {max_date}")
 print(pnl)
 
+# Save
 results_folder = "/Users/andrew/Projects/SilverFund/sf-trading-system/silverfund/research/optimized_momentum/results"
-
 pnl.write_parquet(f"{results_folder}//monthly_optimized_momentum_bt.parquet")
