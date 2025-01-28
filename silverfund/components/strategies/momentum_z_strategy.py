@@ -9,9 +9,9 @@ from silverfund.components.strategies.strategy import Strategy
 class MomentumZStrategy(Strategy):
     def __init__(self, interval: Interval):
         self._interval = interval
-        self._window = {Interval.DAILY: 252, Interval.MONTHLY: 12}[self._interval]
+        self._window = {Interval.DAILY: 252, Interval.MONTHLY: 13}[self._interval]
         self._rolling_window = {Interval.DAILY: 230, Interval.MONTHLY: 11}[self._interval]
-        self._skip = {Interval.DAILY: 22, Interval.MONTHLY: 1}[self._interval]
+        self._lag = {Interval.DAILY: 22, Interval.MONTHLY: 2}[self._interval]
         self._barra_lag = {Interval.DAILY: 2, Interval.MONTHLY: 1}[self._interval]
 
     def compute_signal(self, chunk: pl.DataFrame) -> pl.DataFrame:
@@ -24,7 +24,7 @@ class MomentumZStrategy(Strategy):
         )
 
         # Momentum lag/skip
-        chunk = chunk.with_columns(pl.col("mom").shift(self._skip).over("barrid"))
+        chunk = chunk.with_columns(pl.col("mom").shift(self._lag).over("barrid"))
 
         # Lag total_risk
         chunk = chunk.with_columns(pl.col("total_risk").shift(self._barra_lag).over("barrid"))

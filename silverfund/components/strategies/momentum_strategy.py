@@ -10,7 +10,7 @@ class MomentumStrategy(Strategy):
         self._interval = interval
         self._window = {Interval.DAILY: 252, Interval.MONTHLY: 13}[self._interval]
         self._rolling_window = {Interval.DAILY: 230, Interval.MONTHLY: 11}[self._interval]
-        self._skip = {Interval.DAILY: 22, Interval.MONTHLY: 2}[self._interval]
+        self._lag = {Interval.DAILY: 22, Interval.MONTHLY: 2}[self._interval]
 
     def compute_portfolio(self, chunk: pl.DataFrame) -> list[pl.DataFrame]:
 
@@ -20,7 +20,7 @@ class MomentumStrategy(Strategy):
         )
 
         # Momentum lag/skip
-        chunk = chunk.with_columns(pl.col("mom").shift(self._skip).over("permno"))
+        chunk = chunk.with_columns(pl.col("mom").shift(self._lag).over("permno"))
 
         # Filters
 

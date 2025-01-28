@@ -6,7 +6,7 @@ import seaborn as sns
 from silverfund.backtester import Backtester
 from silverfund.components.enums import Interval
 from silverfund.components.strategies.momentum_z_strategy import MomentumZStrategy
-from silverfund.datasets import MasterMonthly
+from silverfund.datasets.master_monthly import MasterMonthly
 
 # Monthly backtest
 start_date = date(1995, 7, 31)  # Russell is missing 2012-07, and a day early 2017-11-29
