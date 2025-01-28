@@ -172,7 +172,7 @@ class MasterMonthly:
                 df = dataset.load(year)
 
                 # Clean
-                df = self._clean_barra_risk(df)
+                df = self._clean_barra_specific_returns(df)
 
                 dfs.append(df)
         else:
@@ -212,3 +212,9 @@ class MasterMonthly:
         df = df.drop("month").sort(["barrid", "date"])
 
         return df
+
+
+if __name__ == "__main__":
+    data = MasterMonthly(start_date=date(1995, 7, 31), end_date=date(2024, 12, 31)).load_all()
+
+    print(data)

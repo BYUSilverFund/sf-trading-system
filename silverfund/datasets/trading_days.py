@@ -52,7 +52,7 @@ class TradingDays:
         df = df.with_columns(pl.col("date").dt.date())
 
         # Filter
-        df = df.with_columns(pl.col("date").is_between(self._start_date, self._end_date))
+        df = df.filter(pl.col("date").is_between(self._start_date, self._end_date))
 
         # Keep unique and sort
         df = df.unique().sort("date")
