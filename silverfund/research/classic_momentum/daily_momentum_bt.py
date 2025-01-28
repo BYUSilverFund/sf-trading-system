@@ -9,7 +9,7 @@ from silverfund.components.strategies.momentum_strategy import MomentumStrategy
 from silverfund.datasets.crsp_daily import CRSPDaily
 
 # Daily backtest
-start_date = date(2020, 1, 1)
+start_date = date(2022, 1, 1)
 end_date = date(2024, 12, 31)
 
 # Load historical dataset
@@ -37,22 +37,8 @@ pnl = bt.run()
 
 # Table
 print("\n" + "-" * 50 + " Backtest P&L " + "-" * 50)
-
-min_date = pnl["date"].min().strftime("%Y-%m-%d")
-max_date = pnl["date"].max().strftime("%Y-%m-%d")
-
-print(f"From {min_date} to {max_date}")
-
 print(pnl)
 
-# Chart
-plt.figure(figsize=(10, 6))
-sns.lineplot(data=pnl, x="date", y="cumsum")
-plt.ylabel("Cummulative Sum Returns (%)")
-plt.xlabel(None)
-plt.tight_layout()
-
+# Save
 results_folder = "/Users/andrew/Projects/SilverFund/sf-trading-system/silverfund/research/classic_momentum/results"
-
 pnl.write_parquet(f"{results_folder}/daily_momentum_bt.parquet")
-plt.savefig(f"{results_folder}/daily_momentum_bt.png")
