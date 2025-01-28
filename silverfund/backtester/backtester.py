@@ -54,18 +54,16 @@ class Backtester:
         # Calculte portfolio pnl
         pnl = (
             merged.group_by("date")
-            .agg(weighted_ret_mean=pl.col("weighted_ret").sum(), n_assets=pl.col("date").count())
+            .agg(n_assets=pl.col("date").count(), portfolio_ret=pl.col("weighted_ret").sum())
             .sort(by=["date"])
         )
 
         # Calculate portfolio cummulative returns
-        pnl = (
-            pnl.with_columns(pl.col("weighted_ret_mean").alias("portfolio_ret"))
-            .with_columns(pl.col("portfolio_ret").log1p().alias("portfolio_logret"))
-            .with_columns(
-                ((pl.col("portfolio_ret") + 1).cum_prod() - 1).alias("cumprod") * 100,
-                pl.col("portfolio_logret").cum_sum().alias("cumsum") * 100,
-            )
+        pnl = pnl.with_columns(
+            pl.col("portfolio_ret").log1p().alias("portfolio_logret")
+        ).with_columns(
+            ((pl.col("portfolio_ret") + 1).cum_prod() - 1).alias("cumprod") * 100,
+            pl.col("portfolio_logret").cum_sum().alias("cumsum") * 100,
         )
 
         return pnl
