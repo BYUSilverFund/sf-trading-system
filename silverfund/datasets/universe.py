@@ -3,6 +3,7 @@ from typing import Optional
 
 import polars as pl
 
+from silverfund.components.enums import Interval
 from silverfund.datasets.russell_constituents import RussellConstituents
 from silverfund.datasets.trading_days import TradingDays
 
@@ -14,7 +15,7 @@ class Universe:
         self._end_date = end_date or date.today()
 
     def _trading_days(self):
-        trading_days = TradingDays(start_date=self._start_date, end_date=self._end_date).load()
+        trading_days = TradingDays(start_date=self._start_date, end_date=self._end_date, interval=Interval.MONTHLY).load_all()
 
         return trading_days
 
