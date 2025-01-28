@@ -26,6 +26,7 @@ class MasterMonthly:
         if not quiet:
             print("Joining Universe + Barra Returns = Master")
         self.df = universe.join(barra_returns, on=["barrid", "date"], how="left")
+        self.df = universe.join(barra_returns, on=["barrid", "date"], how="left")
 
         # Merge 2
         if not quiet:
@@ -36,6 +37,7 @@ class MasterMonthly:
         if not quiet:
             print("Joining Master + Barra Specific Returns = Master")
         self.df = self.df.join(barra_specific_returns, on=["barrid", "date"], how="left")
+        self.df = self.df.join(barra_risk, on=["barrid", "date"], how="left")
 
         # Sort
         self.df = self.df.sort(by=["barrid", "date"])
@@ -89,7 +91,9 @@ class MasterMonthly:
         df = df.with_columns(pl.col("ret").log1p().alias("logret"))
 
         # Add month column
-        df = df.with_columns(pl.col("date").dt.truncate("1mo").alias("month")).sort(["barrid", "date"])
+        df = df.with_columns(pl.col("date").dt.truncate("1mo").alias("month")).sort(
+            ["barrid", "date"]
+        )
 
         df = df.group_by(["month", "barrid"]).agg(
             pl.col("date").last(),
@@ -143,7 +147,9 @@ class MasterMonthly:
     @staticmethod
     def _clean_barra_risk(df: pl.DataFrame) -> pl.DataFrame:
         # Add month column
-        df = df.with_columns(pl.col("date").dt.truncate("1mo").alias("month")).sort(["barrid", "date"])
+        df = df.with_columns(pl.col("date").dt.truncate("1mo").alias("month")).sort(
+            ["barrid", "date"]
+        )
 
         df = df.group_by(["month", "barrid"]).agg(
             pl.col("date").last(),
@@ -172,7 +178,7 @@ class MasterMonthly:
                 df = dataset.load(year)
 
                 # Clean
-                df = self._clean_barra_risk(df)
+                df = self._clean_barra_specific_returns(df)
 
                 dfs.append(df)
         else:
@@ -198,7 +204,9 @@ class MasterMonthly:
         df = df.with_columns(pl.col("spec_ret").log1p().alias("log_spec_ret"))
 
         # Add month column
-        df = df.with_columns(pl.col("date").dt.truncate("1mo").alias("month")).sort(["barrid", "date"])
+        df = df.with_columns(pl.col("date").dt.truncate("1mo").alias("month")).sort(
+            ["barrid", "date"]
+        )
 
         df = df.group_by(["month", "barrid"]).agg(
             pl.col("date").last(),
@@ -212,3 +220,9 @@ class MasterMonthly:
         df = df.drop("month").sort(["barrid", "date"])
 
         return df
+
+
+if __name__ == "__main__":
+    data = MasterMonthly(start_date=date(1995, 7, 31), end_date=date(2024, 12, 31)).load_all()
+
+    print(data)
