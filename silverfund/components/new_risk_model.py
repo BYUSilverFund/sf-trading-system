@@ -6,7 +6,6 @@ import polars as pl
 from silverfund.datasets.barra_factor_covariances import BarraFactorCovariances
 from silverfund.datasets.barra_factor_exposures import BarraFactorExposures
 from silverfund.datasets.barra_specific_risk_forecast import BarraSpecificRiskForecast
-from silverfund.datasets.master_monthly import MasterMonthly
 
 
 class NewRiskModel:
@@ -106,12 +105,3 @@ class NewRiskModel:
         )
 
         return risk_model
-
-
-if __name__ == "__main__":
-    date_ = date(2023, 12, 29)
-    master = MasterMonthly(start_date=date_, end_date=date_).load_all()
-    barrids = master["barrid"].unique().sort()
-
-    nrm = NewRiskModel(date_=date_, barrids=barrids).load()
-    print(nrm)

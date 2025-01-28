@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import matplotlib.pyplot as plt
+import numpy as np
 import polars as pl
 import seaborn as sns
 
@@ -9,6 +10,16 @@ results_folder = Path(
 )
 
 pnl = pl.read_parquet(results_folder / "monthly_momentum_bt.parquet")
+
+# Calculate sharpe ratio
+portfolio_er = pnl.select("portfolio_ret").mean()
+portfolio_vol = pnl.select("portfolio_ret").std()
+
+annual_factor = 12 / np.sqrt(12)
+
+sharpe = (portfolio_er / portfolio_vol) * annual_factor
+
+print(f"Annualized Sharpe:", round(sharpe.item(), 4))
 
 # Cummulative Sum Chart
 plt.figure(figsize=(10, 6))

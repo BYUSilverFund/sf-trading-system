@@ -3,6 +3,8 @@ import numpy as np
 import polars as pl
 import seaborn as sns
 
+results_folder = "/Users/andrew/Projects/SilverFund/sf-trading-system/silverfund/research/optimized_momentum/results"
+
 pnl = pl.read_parquet(
     "silverfund/research/optimized_momentum/results/monthly_optimized_momentum_bt.parquet"
 )
@@ -24,7 +26,6 @@ plt.xlabel(None)
 plt.ylabel("Cummulative Product Returns (%)")
 
 # Save and clear
-results_folder = "/Users/andrew/Projects/SilverFund/sf-trading-system/silverfund/research/optimized_momentum/results"
 plt.savefig(f"{results_folder}/monthly_optimized_momentum_product_bt.png")
 plt.clf()
 
@@ -35,6 +36,5 @@ plt.xlabel(None)
 plt.ylabel("Cummulative Sum Returns (%)")
 
 # Save and clear
-results_folder = "/Users/andrew/Projects/SilverFund/sf-trading-system/silverfund/research/optimized_momentum/results"
 plt.savefig(f"{results_folder}/monthly_optimized_momentum_sum_bt.png")
 plt.clf()
