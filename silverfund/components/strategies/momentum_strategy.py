@@ -16,7 +16,12 @@ class MomentumStrategy(Strategy):
 
         # Momentum signal formation
         chunk = chunk.with_columns(pl.col("ret").log1p().alias("logret")).with_columns(
-            pl.col("logret").rolling_sum(window_size=self._rolling_window, min_periods=self._rolling_window, center=False).over("permno").alias("mom")
+            pl.col("logret")
+            .rolling_sum(
+                window_size=self._rolling_window, min_periods=self._rolling_window, center=False
+            )
+            .over("permno")
+            .alias("mom")
         )
 
         # Momentum lag/skip
@@ -40,7 +45,9 @@ class MomentumStrategy(Strategy):
         portfolios = decile_portfolio(chunk, "mom", Weighting.EQUAL)
 
         # Long good momentum, short poor momentum
-        long_short_portfolio = pl.concat([portfolios[0].with_columns(pl.col("weight") * -1), portfolios[9]]).drop(["bin", "mom"])
+        long_short_portfolio = pl.concat(
+            [portfolios[0].with_columns(pl.col("weight") * -1), portfolios[9]]
+        ).drop(["bin", "mom"])
 
         return long_short_portfolio
 

@@ -10,7 +10,9 @@ from tqdm import tqdm
 
 class CRSPDaily:
 
-    def __init__(self, start_date: Optional[date] = None, end_date: Optional[date] = None, quite: bool = True) -> None:
+    def __init__(
+        self, start_date: Optional[date] = None, end_date: Optional[date] = None, quite: bool = True
+    ) -> None:
         self._start_date = start_date
         self._end_date = end_date or date.today()
 

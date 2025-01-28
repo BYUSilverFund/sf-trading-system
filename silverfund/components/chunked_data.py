@@ -13,7 +13,11 @@ class ChunkedData:
         min_date = data["date"].min()
         max_date = data["date"].max()
 
-        trading_days = TradingDays(start_date=min_date, end_date=max_date, interval=interval).load_all()["date"].to_list()
+        trading_days = (
+            TradingDays(start_date=min_date, end_date=max_date, interval=interval)
+            .load_all()["date"]
+            .to_list()
+        )
 
         chunks = []
         for i in tqdm(range(window, len(trading_days) + 1), desc="Chunking data"):

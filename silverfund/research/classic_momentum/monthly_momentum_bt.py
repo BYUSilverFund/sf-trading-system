@@ -23,7 +23,14 @@ historical_data = (
 )
 
 # Create backtest instance
-bt = Backtester(start_date=start_date, end_date=end_date, interval=Interval.MONTHLY, historical_data=historical_data, strategy=MomentumStrategy, security_identifier="permno")
+bt = Backtester(
+    start_date=start_date,
+    end_date=end_date,
+    interval=Interval.MONTHLY,
+    historical_data=historical_data,
+    strategy=MomentumStrategy,
+    security_identifier="permno",
+)
 
 # Run backtest
 pnl = bt.run()

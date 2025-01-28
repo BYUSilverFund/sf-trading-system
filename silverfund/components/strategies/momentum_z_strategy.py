@@ -20,7 +20,12 @@ class MomentumZStrategy(Strategy):
 
         # Momentum signal formation
         chunk = chunk.with_columns(pl.col("ret").log1p().alias("logret")).with_columns(
-            pl.col("logret").rolling_sum(window_size=self._rolling_window, min_periods=self._rolling_window, center=False).over("barrid").alias("mom")
+            pl.col("logret")
+            .rolling_sum(
+                window_size=self._rolling_window, min_periods=self._rolling_window, center=False
+            )
+            .over("barrid")
+            .alias("mom")
         )
 
         # Momentum lag/skip
@@ -38,7 +43,9 @@ class MomentumZStrategy(Strategy):
         chunk = self.compute_signal(chunk)
 
         # Z-score the momentum signal
-        chunk = chunk.with_columns(((pl.col("mom") - pl.col("mom").mean()) / pl.col("mom").std()).alias("score"))
+        chunk = chunk.with_columns(
+            ((pl.col("mom") - pl.col("mom").mean()) / pl.col("mom").std()).alias("score")
+        )
 
         return chunk
 
@@ -67,7 +74,9 @@ class MomentumZStrategy(Strategy):
         weights = qp(alphas, covariance_matrix)
 
         # Package portfolio
-        portfolio = chunk.with_columns(pl.Series(weights).alias("weight")).select(["date", "barrid", "weight"])
+        portfolio = chunk.with_columns(pl.Series(weights).alias("weight")).select(
+            ["date", "barrid", "weight"]
+        )
         return portfolio
 
     @property

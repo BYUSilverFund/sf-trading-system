@@ -49,7 +49,9 @@ class BarraSpecificReturns:
         df = df.rename({col: col.lower() for col in df.columns})
 
         # Reorder columns
-        df = df.select(["date", "barrid"] + [col for col in df.columns if col not in ["date", "barrid"]])
+        df = df.select(
+            ["date", "barrid"] + [col for col in df.columns if col not in ["date", "barrid"]]
+        )
 
         # Sort
         df = df.sort(by=["barrid", "date"])

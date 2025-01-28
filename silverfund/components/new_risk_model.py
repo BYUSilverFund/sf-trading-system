@@ -58,7 +58,9 @@ class NewRiskModel:
         exp_mat = bfe.pivot(on="factor", index="barrid", values="exposure")
 
         # Sort headers and rows
-        exp_mat = exp_mat.select(["barrid"] + sorted([col for col in exp_mat.columns if col != "barrid"]))
+        exp_mat = exp_mat.select(
+            ["barrid"] + sorted([col for col in exp_mat.columns if col != "barrid"])
+        )
         exp_mat = exp_mat.sort(by="barrid")
 
         # Fill null values

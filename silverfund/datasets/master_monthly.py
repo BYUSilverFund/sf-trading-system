@@ -89,7 +89,9 @@ class MasterMonthly:
         df = df.with_columns(pl.col("ret").log1p().alias("logret"))
 
         # Add month column
-        df = df.with_columns(pl.col("date").dt.truncate("1mo").alias("month")).sort(["barrid", "date"])
+        df = df.with_columns(pl.col("date").dt.truncate("1mo").alias("month")).sort(
+            ["barrid", "date"]
+        )
 
         df = df.group_by(["month", "barrid"]).agg(
             pl.col("date").last(),
@@ -143,7 +145,9 @@ class MasterMonthly:
     @staticmethod
     def _clean_barra_risk(df: pl.DataFrame) -> pl.DataFrame:
         # Add month column
-        df = df.with_columns(pl.col("date").dt.truncate("1mo").alias("month")).sort(["barrid", "date"])
+        df = df.with_columns(pl.col("date").dt.truncate("1mo").alias("month")).sort(
+            ["barrid", "date"]
+        )
 
         df = df.group_by(["month", "barrid"]).agg(
             pl.col("date").last(),
@@ -198,7 +202,9 @@ class MasterMonthly:
         df = df.with_columns(pl.col("spec_ret").log1p().alias("log_spec_ret"))
 
         # Add month column
-        df = df.with_columns(pl.col("date").dt.truncate("1mo").alias("month")).sort(["barrid", "date"])
+        df = df.with_columns(pl.col("date").dt.truncate("1mo").alias("month")).sort(
+            ["barrid", "date"]
+        )
 
         df = df.group_by(["month", "barrid"]).agg(
             pl.col("date").last(),
