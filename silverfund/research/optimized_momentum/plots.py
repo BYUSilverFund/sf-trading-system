@@ -3,7 +3,9 @@ import numpy as np
 import polars as pl
 import seaborn as sns
 
-pnl = pl.read_parquet("silverfund/research/optimized_momentum/results/monthly_optimized_momentum_bt.parquet")
+pnl = pl.read_parquet(
+    "silverfund/research/optimized_momentum/results/monthly_optimized_momentum_bt.parquet"
+)
 
 # Calculate sharpe ratio
 portfolio_er = pnl.select("portfolio_ret").mean()

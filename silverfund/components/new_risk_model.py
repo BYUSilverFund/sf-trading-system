@@ -3,7 +3,10 @@ from datetime import date
 import numpy as np
 import polars as pl
 
-from silverfund.datasets import BarraFactorCovariances, BarraFactorExposures, BarraSpecificRiskForecast, MasterMonthly
+from silverfund.datasets.barra_factor_covariances import BarraFactorCovariances
+from silverfund.datasets.barra_factor_exposures import BarraFactorExposures
+from silverfund.datasets.barra_specific_risk_forecast import BarraSpecificRiskForecast
+from silverfund.datasets.master_monthly import MasterMonthly
 
 
 class NewRiskModel:
@@ -55,7 +58,9 @@ class NewRiskModel:
         exp_mat = bfe.pivot(on="factor", index="barrid", values="exposure")
 
         # Sort headers and rows
-        exp_mat = exp_mat.select(["barrid"] + sorted([col for col in exp_mat.columns if col != "barrid"]))
+        exp_mat = exp_mat.select(
+            ["barrid"] + sorted([col for col in exp_mat.columns if col != "barrid"])
+        )
         exp_mat = exp_mat.sort(by="barrid")
 
         # Fill null values

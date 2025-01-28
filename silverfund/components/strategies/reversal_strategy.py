@@ -16,7 +16,12 @@ class ReversalStrategy(Strategy):
 
         # Reversal signal formation
         chunk = chunk.with_columns(pl.col("ret").log1p().alias("logret")).with_columns(
-            pl.col("logret").rolling_sum(window_size=self._rolling_window, min_periods=self._rolling_window, center=False).over("permno").alias("rev")
+            pl.col("logret")
+            .rolling_sum(
+                window_size=self._rolling_window, min_periods=self._rolling_window, center=False
+            )
+            .over("permno")
+            .alias("rev")
         )
 
         # Reversal lag/skip
@@ -40,7 +45,9 @@ class ReversalStrategy(Strategy):
         portfolios = decile_portfolio(chunk, "rev", Weighting.EQUAL)
 
         # Long negative reversal, short positive reversal
-        long_short_portfolio = pl.concat([portfolios[9].with_columns(pl.col("weight") * -1), portfolios[0]]).drop(["bin", "rev"])
+        long_short_portfolio = pl.concat(
+            [portfolios[9].with_columns(pl.col("weight") * -1), portfolios[0]]
+        ).drop(["bin", "rev"])
 
         return long_short_portfolio
 
