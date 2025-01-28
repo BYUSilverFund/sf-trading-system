@@ -6,7 +6,7 @@ import seaborn as sns
 from silverfund.backtester import Backtester
 from silverfund.components.enums import Interval
 from silverfund.components.strategies.momentum_strategy import MomentumStrategy
-from silverfund.datasets import CRSPMonthly
+from silverfund.datasets.crsp_monthly import CRSPMonthly
 
 # Monthly backtest
 start_date = date(1995, 7, 31)
