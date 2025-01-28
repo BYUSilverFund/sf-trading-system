@@ -3,7 +3,10 @@ from datetime import date
 import numpy as np
 import polars as pl
 
-from silverfund.datasets import BarraFactorCovariances, BarraFactorExposures, BarraSpecificRiskForecast, MasterMonthly
+from silverfund.datasets.barra_factor_covariances import BarraFactorCovariances
+from silverfund.datasets.barra_factor_exposures import BarraFactorExposures
+from silverfund.datasets.barra_specific_risk_forecast import BarraSpecificRiskForecast
+from silverfund.datasets.master_monthly import MasterMonthly
 
 
 class NewRiskModel:
