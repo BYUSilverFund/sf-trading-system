@@ -3,6 +3,7 @@ import polars as pl
 from silverfund.components.enums import Interval
 from silverfund.components.new_risk_model import NewRiskModel
 from silverfund.components.optimizers import qp
+from silverfund.components.optimizers.new_constraints import FullInvestment, NoLeverage
 from silverfund.components.strategies.strategy import Strategy
 
 
@@ -71,7 +72,8 @@ class MomentumZStrategy(Strategy):
         alphas = alphas["alpha"].to_numpy()
 
         # Optimize
-        weights = qp(alphas, covariance_matrix)
+        constraints = [FullInvestment, NoLeverage]
+        weights = qp(alphas, covariance_matrix, constraints)
 
         # Package portfolio
         portfolio = chunk.with_columns(pl.Series(weights).alias("weight")).select(
