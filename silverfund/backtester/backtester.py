@@ -1,9 +1,6 @@
-import time
 from datetime import date
 
-import matplotlib.pyplot as plt
 import polars as pl
-import seaborn as sns
 
 from silverfund.components.chunked_data import ChunkedData
 from silverfund.components.enums import Interval
@@ -49,21 +46,25 @@ class Backtester:
         )
 
         # Calculate weighted returns
-        merged = merged.with_columns((pl.col("weight") * pl.col("ret")).alias("weighted_ret"))
+        merged = merged.with_columns(
+            (pl.col("weight") * pl.col("ret")).alias("weighted_ret"),
+        )
 
         # Calculte portfolio pnl
         pnl = (
             merged.group_by("date")
-            .agg(n_assets=pl.col("date").count(), portfolio_ret=pl.col("weighted_ret").sum())
+            .agg(
+                n_assets=pl.col("date").count(),
+                portfolio_ret=pl.col("weighted_ret").sum(),
+            )
             .sort(by=["date"])
         )
 
         # Calculate portfolio cummulative returns
+        pnl = pnl.with_columns(pl.col("portfolio_ret").log1p().alias("portfolio_logret"))
         pnl = pnl.with_columns(
-            pl.col("portfolio_ret").log1p().alias("portfolio_logret")
-        ).with_columns(
             ((pl.col("portfolio_ret") + 1).cum_prod() - 1).alias("cumprod") * 100,
-            pl.col("portfolio_logret").cum_sum().alias("cumsum") * 100,
+            (pl.col("portfolio_logret").cum_sum().alias("cumsum")) * 100,
         )
 
         return pnl
