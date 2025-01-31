@@ -15,9 +15,13 @@ class Universe:
         self._end_date = end_date or date.today()
 
     def _trading_days(self):
-        trading_days = TradingDays(
-            start_date=self._start_date, end_date=self._end_date, interval=Interval.MONTHLY
-        ).load_all()
+        trading_days = (
+            TradingDays(
+                start_date=self._start_date, end_date=self._end_date, interval=Interval.MONTHLY
+            )
+            .load_all()
+            .select("date")
+        )
         return trading_days
 
     def _russell_constituents(self):
