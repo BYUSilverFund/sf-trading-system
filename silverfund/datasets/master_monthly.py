@@ -3,9 +3,11 @@ from datetime import date
 import polars as pl
 from tqdm import tqdm
 
+from silverfund.components.enums import Interval
 from silverfund.datasets.barra_returns import BarraReturns
 from silverfund.datasets.barra_risk_forecasts import BarraRiskForecasts
 from silverfund.datasets.barra_specific_returns import BarraSpecificReturns
+from silverfund.datasets.trading_days import TradingDays
 from silverfund.datasets.universe import Universe
 
 
@@ -18,14 +20,20 @@ class MasterMonthly:
 
         # Load universe, returns, and risk
         universe = self._universe()
+        trading_days = self._trading_days()
         barra_returns = self._barra_returns()
         barra_risk = self._barra_risk()
         barra_specific_returns = self._barra_specific_returns()
 
+        # Merge 0
+        if not quiet:
+            print("Joining Universe + Trading Days = Master")
+        self.df = universe.join(trading_days, on=["date"], how="left")
+
         # Merge 1
         if not quiet:
             print("Joining Universe + Barra Returns = Master")
-        self.df = universe.join(barra_returns, on=["barrid", "date"], how="left")
+        self.df = self.df.join(barra_returns, on=["barrid", "date"], how="left")
 
         # Merge 2
         if not quiet:
@@ -48,6 +56,14 @@ class MasterMonthly:
         universe = Universe(start_date=self._start_date, end_date=self._end_date).load()
 
         return universe
+
+    def _trading_days(self):
+        # Load
+        trading_days = TradingDays(
+            start_date=self._start_date, end_date=self._end_date, interval=Interval.MONTHLY
+        ).load_all()
+
+        return trading_days
 
     def _barra_returns(self) -> pl.DataFrame:
         dataset = BarraReturns()
@@ -218,9 +234,3 @@ class MasterMonthly:
         df = df.drop("month").sort(["barrid", "date"])
 
         return df
-
-
-if __name__ == "__main__":
-    data = MasterMonthly(start_date=date(1995, 7, 31), end_date=date(2024, 12, 31)).load_all()
-
-    print(data)
