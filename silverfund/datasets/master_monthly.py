@@ -32,7 +32,7 @@ class MasterMonthly:
 
         # Merge 1
         if not quiet:
-            print("Joining Universe + Barra Returns = Master")
+            print("Joining Master + Barra Returns = Master")
         self.df = self.df.join(barra_returns, on=["barrid", "date"], how="left")
 
         # Merge 2
