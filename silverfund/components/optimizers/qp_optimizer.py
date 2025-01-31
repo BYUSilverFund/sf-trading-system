@@ -1,18 +1,18 @@
 import cvxpy as cp
 import numpy as np
+import polars as pl
 
 from silverfund.components.optimizers.new_constraints import Constraint
 
 
 def qp(
-    alphas: np.ndarray,
+    chunk: pl.DataFrame,
     covariance_matrix: np.ndarray,
     constraints: list[Constraint],
     gamma: float = 2.0,
 ):
-    """
-    The assets dataframe has a barrid and alpha column
-    """
+    alphas = chunk["alpha"].to_numpy()
+    betas = chunk["predbeta_lag"].to_numpy()
 
     # Declare variables
     n_assets = len(alphas)
@@ -24,7 +24,9 @@ def qp(
     objective = cp.Maximize(portfolio_alpha - 0.5 * gamma * portfolio_variance)
 
     # Constraints
-    constraints = [c for constraint in constraints for c in constraint.construct(weights)]
+    constraints = [
+        c for constraint in constraints for c in constraint.construct(weights=weights, betas=betas)
+    ]
 
     # Formulate problem
     problem = cp.Problem(objective=objective, constraints=constraints)
@@ -35,7 +37,12 @@ def qp(
     # Scale weights
     scaled_weights = weights.value / sum(weights.value)
 
-    return scaled_weights
+    # Package portfolio
+    portfolio = chunk.with_columns(pl.Series(scaled_weights).alias("weight")).select(
+        ["date", "barrid", "weight"]
+    )
+
+    return portfolio
 
 
 if __name__ == "__main__":
