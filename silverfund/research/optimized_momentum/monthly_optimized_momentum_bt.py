@@ -7,7 +7,7 @@ from silverfund.optimizers.new_constraints import *
 from silverfund.strategies.momentum_z_strategy import MomentumZStrategy
 
 # Monthly backtest
-start_date = date(2010, 1, 1)  # date(1998, 10, 31)
+start_date = date(2020, 1, 1)  # date(1998, 10, 31)
 end_date = date(2024, 12, 31)
 
 # Load historical dataset
