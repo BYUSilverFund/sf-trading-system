@@ -1,9 +1,10 @@
 from datetime import date
 
 from silverfund.backtester import Backtester
-from silverfund.components.enums import Interval
-from silverfund.components.strategies.momentum_z_strategy import MomentumZStrategy
 from silverfund.datasets.master_monthly import MasterMonthly
+from silverfund.enums import Interval
+from silverfund.optimizers.new_constraints import *
+from silverfund.strategies.momentum_z_strategy import MomentumZStrategy
 
 # Monthly backtest
 start_date = date(1995, 7, 31)
@@ -22,6 +23,7 @@ bt = Backtester(
     interval=Interval.MONTHLY,
     historical_data=historical_data,
     strategy=MomentumZStrategy,
+    constraints=[FullInvestment, NoBuyingOnMargin, LongOnly, UnitBeta],
     security_identifier="barrid",
 )
 
@@ -34,4 +36,4 @@ print(pnl)
 
 # Save
 results_folder = "/Users/andrew/Projects/SilverFund/sf-trading-system/silverfund/research/optimized_momentum/results"
-pnl.write_parquet(f"{results_folder}//monthly_optimized_momentum_bt.parquet")
+pnl.write_parquet(f"{results_folder}/monthly_optimized_momentum_bt.parquet")

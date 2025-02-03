@@ -1,13 +1,11 @@
-import time
 from datetime import date
 
-import matplotlib.pyplot as plt
 import polars as pl
-import seaborn as sns
 
-from silverfund.components.chunked_data import ChunkedData
-from silverfund.components.enums import Interval
-from silverfund.components.strategies.strategy import Strategy
+from silverfund.chunked_data import ChunkedData
+from silverfund.enums import Interval
+from silverfund.optimizers.new_constraints import Constraint
+from silverfund.strategies.strategy import Strategy
 
 
 class Backtester:
@@ -19,6 +17,7 @@ class Backtester:
         interval: Interval,
         historical_data: pl.DataFrame,
         strategy: Strategy,
+        constraints: list[Constraint],
         security_identifier: str,
     ):
         self.start_date = start_date
@@ -26,6 +25,7 @@ class Backtester:
         self.interval = interval
         self.historical_data = historical_data
         self.strategy = strategy(interval)
+        self.constraints = constraints
         self._security_identifier = security_identifier
 
     def run(self):
@@ -38,7 +38,7 @@ class Backtester:
         )
 
         # Apply strategy
-        portfolios = chunked_data.apply_strategy(self.strategy)
+        portfolios = chunked_data.apply_strategy(self.strategy, self.constraints)
 
         # Concatenate portfolios
         portfolios = pl.concat(portfolios)
@@ -49,21 +49,25 @@ class Backtester:
         )
 
         # Calculate weighted returns
-        merged = merged.with_columns((pl.col("weight") * pl.col("ret")).alias("weighted_ret"))
+        merged = merged.with_columns(
+            (pl.col("weight") * pl.col("ret")).alias("weighted_ret"),
+        )
 
         # Calculte portfolio pnl
         pnl = (
             merged.group_by("date")
-            .agg(n_assets=pl.col("date").count(), portfolio_ret=pl.col("weighted_ret").sum())
+            .agg(
+                n_assets=pl.col("date").count(),
+                portfolio_ret=pl.col("weighted_ret").sum(),
+            )
             .sort(by=["date"])
         )
 
         # Calculate portfolio cummulative returns
+        pnl = pnl.with_columns(pl.col("portfolio_ret").log1p().alias("portfolio_logret"))
         pnl = pnl.with_columns(
-            pl.col("portfolio_ret").log1p().alias("portfolio_logret")
-        ).with_columns(
             ((pl.col("portfolio_ret") + 1).cum_prod() - 1).alias("cumprod") * 100,
-            pl.col("portfolio_logret").cum_sum().alias("cumsum") * 100,
+            (pl.col("portfolio_logret").cum_sum().alias("cumsum")) * 100,
         )
 
         return pnl

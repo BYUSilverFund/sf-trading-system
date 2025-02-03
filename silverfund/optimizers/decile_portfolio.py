@@ -1,7 +1,7 @@
 import numpy as np
 import polars as pl
 
-from silverfund.components.enums import Weighting
+from silverfund.enums import Weighting
 
 
 def decile_portfolio(chunk: pl.DataFrame, signal: str, weighting: Weighting):
