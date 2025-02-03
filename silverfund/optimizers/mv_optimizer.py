@@ -15,8 +15,8 @@ import numpy as np
 import pandas as pd
 
 from silverfund.components.alpha import Alpha
-from silverfund.components.optimizers.constraints import Constraint
 from silverfund.components.risk_model import RiskModel
+from silverfund.optimizers.constraints import Constraint
 
 # ------------------------------------------------------------------------------------------------ #
 #                                 MVPortfolioConstructor Class

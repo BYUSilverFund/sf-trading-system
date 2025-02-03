@@ -2,7 +2,7 @@ import cvxpy as cp
 import numpy as np
 import polars as pl
 
-from silverfund.components.optimizers.new_constraints import Constraint
+from silverfund.optimizers.new_constraints import Constraint
 
 
 def qp(
@@ -12,7 +12,7 @@ def qp(
     gamma: float = 2.0,
 ):
     alphas = chunk["alpha"].to_numpy()
-    betas = chunk["predbeta_lag"].to_numpy()
+    betas = chunk["predbeta"].to_numpy()
 
     # Declare variables
     n_assets = len(alphas)
@@ -43,15 +43,3 @@ def qp(
     )
 
     return portfolio
-
-
-if __name__ == "__main__":
-    # Test data setup
-    alphas = np.array([0.1, 0.2, 0.15])
-    covariance_matrix_data = np.array([[0.1, 0.02, 0.03], [0.02, 0.1, 0.04], [0.03, 0.04, 0.1]])
-
-    # Run the function
-    weights = qp(alphas, covariance_matrix_data)
-
-    # Display the result
-    print("Optimized Weights:", weights)

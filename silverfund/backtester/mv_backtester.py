@@ -14,11 +14,11 @@ import ray
 from ray.experimental import tqdm_ray
 from tqdm import tqdm
 
-import silverfund.components.optimizers.constraints as cons
+import silverfund.optimizers.constraints as cons
 from silverfund.components.alpha import PreComputedAlpha
-from silverfund.components.optimizers import MVPortfolioConstructor
 from silverfund.components.risk_model import FactorRiskModel
 from silverfund.datasets.dataio import *
+from silverfund.optimizers import MVPortfolioConstructor
 
 # ----------------------------------------------------------------------------------------------
 #                                       MVBacktester Class

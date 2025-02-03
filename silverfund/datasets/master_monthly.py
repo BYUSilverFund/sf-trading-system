@@ -3,12 +3,12 @@ from datetime import date
 import polars as pl
 from tqdm import tqdm
 
-from silverfund.components.enums import Interval
 from silverfund.datasets.barra_returns import BarraReturns
 from silverfund.datasets.barra_risk_forecasts import BarraRiskForecasts
 from silverfund.datasets.barra_specific_returns import BarraSpecificReturns
 from silverfund.datasets.trading_days import TradingDays
 from silverfund.datasets.universe import Universe
+from silverfund.enums import Interval
 
 
 class MasterMonthly:

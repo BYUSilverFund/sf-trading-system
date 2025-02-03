@@ -6,9 +6,9 @@ import polars as pl
 from dotenv import load_dotenv
 from tqdm import tqdm
 
-from silverfund.components.enums import Interval
 from silverfund.datasets.crsp_daily import CRSPDaily
 from silverfund.datasets.crsp_monthly import CRSPMonthly
+from silverfund.enums import Interval
 
 
 class TradingDays:

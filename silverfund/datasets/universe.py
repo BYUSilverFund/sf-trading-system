@@ -3,9 +3,9 @@ from typing import Optional
 
 import polars as pl
 
-from silverfund.components.enums import Interval
 from silverfund.datasets.russell_constituents import RussellConstituents
 from silverfund.datasets.trading_days import TradingDays
+from silverfund.enums import Interval
 
 
 class Universe:

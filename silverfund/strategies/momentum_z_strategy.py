@@ -1,10 +1,10 @@
 import polars as pl
 
-from silverfund.components.enums import Interval
-from silverfund.components.new_risk_model import NewRiskModel
-from silverfund.components.optimizers import qp
-from silverfund.components.optimizers.new_constraints import FullInvestment, UnitBeta
-from silverfund.components.strategies.strategy import Strategy
+from silverfund.enums import Interval
+from silverfund.new_risk_model import NewRiskModel
+from silverfund.optimizers import qp
+from silverfund.optimizers.new_constraints import Constraint
+from silverfund.strategies.strategy import Strategy
 
 
 class MomentumZStrategy(Strategy):
@@ -64,17 +64,18 @@ class MomentumZStrategy(Strategy):
 
         return chunk
 
-    def compute_portfolio(self, chunk: pl.DataFrame) -> list[pl.DataFrame]:
+    def compute_portfolio(
+        self, chunk: pl.DataFrame, constraints: list[Constraint]
+    ) -> list[pl.DataFrame]:
         chunk = self.compute_alpha(chunk)
-        date_lag = chunk["date_lag_1d"].max()
+        date_lag = chunk["date"].max()
         barrids = chunk["barrid"].unique().to_list()
 
         # Load covariance matrix on prior date
-        covariance_matrix = NewRiskModel(date_lag, barrids).load()
-        covariance_matrix = covariance_matrix.drop("barrid").to_numpy()
+        covariance_matrix = NewRiskModel(date_lag, barrids).load().drop("barrid")
+        covariance_matrix = covariance_matrix.to_numpy()
 
         # Optimize
-        constraints = [FullInvestment, UnitBeta]
         portfolio = qp(chunk, covariance_matrix, constraints)
 
         return portfolio

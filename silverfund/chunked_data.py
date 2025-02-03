@@ -3,10 +3,10 @@ from datetime import date
 import polars as pl
 from tqdm import tqdm
 
-from silverfund.components.enums import Interval
-from silverfund.components.optimizers.new_constraints import Constraint
-from silverfund.components.strategies.strategy import Strategy
 from silverfund.datasets.trading_days import TradingDays
+from silverfund.enums import Interval
+from silverfund.optimizers.new_constraints import Constraint
+from silverfund.strategies.strategy import Strategy
 
 
 class ChunkedData:
