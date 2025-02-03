@@ -10,7 +10,7 @@ from silverfund.datasets.master_monthly import MasterMonthly
 
 # Monthly backtest
 # start_date = date(1995, 7, 31)
-start_date = date(1995, 7, 31)
+start_date = date(2017, 12, 31)
 end_date = date(2024, 12, 31)
 
 # start_date = date(2024, 10, 31)
@@ -63,5 +63,5 @@ print(pnl)
 # results_folder = "/Users/bwaits/Research/sf-trading-system/reversal_research"
 
 pnl.write_parquet(
-    f"/home/bwaits/Research/sf-trading-system/reversal_research/monthly_optimized_reversal_bt.parquet"
+    f"/home/bwaits/Research/sf-trading-system/reversal_research/monthly_optimized_reversal_bt_7yr_redo.parquet"
 )

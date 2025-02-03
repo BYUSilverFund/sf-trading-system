@@ -3,6 +3,7 @@ import polars as pl
 from silverfund.components.enums import Interval
 from silverfund.components.new_risk_model import NewRiskModel
 from silverfund.components.optimizers import qp
+from silverfund.components.optimizers.new_constraints import FullInvestment, NoLeverage
 from silverfund.components.strategies.strategy import Strategy
 
 
@@ -19,12 +20,19 @@ class ReversalZStrategy(Strategy):
         #     pl.col("logret").rolling_sum(window_size=self._rolling_window, min_periods=self._rolling_window, center=False).over("barrid").alias("mom")
         # )
 
-        chunk = chunk.with_columns(pl.col("log_spec_ret").rolling_sum(window_size=self._rolling_window, min_periods=self._rolling_window, center=False).over("barrid").alias("rev"))
+        chunk = chunk.with_columns(
+            pl.col("log_spec_ret")
+            .rolling_sum(
+                window_size=self._rolling_window, min_periods=self._rolling_window, center=False
+            )
+            .over("barrid")
+            .alias("rev")
+        )
 
-        # Momentum lag/skip
+        # reversal lag/skip
         chunk = chunk.with_columns(pl.col("rev").shift(self._skip).over("barrid"))
 
-        # Non-null momentum
+        # Non-null reversal values
         chunk = chunk.drop_nulls(subset="rev")
 
         return chunk
@@ -32,7 +40,10 @@ class ReversalZStrategy(Strategy):
     def compute_score(self, chunk: pl.DataFrame) -> pl.DataFrame:
         chunk = self.compute_signal(chunk)
 
-        chunk = chunk.with_columns(((pl.col("rev") - pl.col("rev").mean()) / pl.col("rev").std()).alias("score"))
+        # chunk = chunk.with_columns(((pl.col("rev") - pl.col("rev").mean()) / pl.col("rev").std()).alias("score"))
+        chunk = chunk.with_columns(
+            ((pl.col("rev").mean() - pl.col("rev")) / pl.col("rev").std()).alias("score")
+        )
 
         return chunk
 
@@ -54,15 +65,20 @@ class ReversalZStrategy(Strategy):
         covariance_matrix = NewRiskModel(date_, barrids).load()
         alphas = chunk.select(["barrid", "alpha"])
 
-        # Convert to numpy matrix and vecotr
+        # Convert to numpy matrix and vector
         covariance_matrix = covariance_matrix.drop("barrid").to_numpy()
         alphas = alphas["alpha"].to_numpy()
 
+        # optimizer constraints
+        constraints = [FullInvestment, NoLeverage]
+
         # Optimize
-        weights = qp(alphas, covariance_matrix)
+        weights = qp(alphas, covariance_matrix, constraints)
 
         # Package portfolio
-        portfolio = chunk.with_columns(pl.Series(weights).alias("weight")).select(["date", "barrid", "weight"])
+        portfolio = chunk.with_columns(pl.Series(weights).alias("weight")).select(
+            ["date", "barrid", "weight"]
+        )
         return portfolio
 
     @property
