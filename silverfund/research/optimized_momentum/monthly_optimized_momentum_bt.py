@@ -10,14 +10,10 @@ start_date = date(1995, 7, 31)
 end_date = date(2024, 12, 31)
 
 # Load historical dataset
-historical_data = (
-    MasterMonthly(
-        start_date=start_date,
-        end_date=end_date,
-    )
-    .load_all()
-    .select(["date", "barrid", "mktcap", "price", "ret", "total_risk", "spec_risk"])
-)
+historical_data = MasterMonthly(
+    start_date=start_date,
+    end_date=end_date,
+).load_all()
 
 # Create backtest instance
 bt = Backtester(

@@ -26,7 +26,6 @@ class MasterMonthly:
         if not quiet:
             print("Joining Universe + Barra Returns = Master")
         self.df = universe.join(barra_returns, on=["barrid", "date"], how="left")
-        self.df = universe.join(barra_returns, on=["barrid", "date"], how="left")
 
         # Merge 2
         if not quiet:
@@ -37,7 +36,6 @@ class MasterMonthly:
         if not quiet:
             print("Joining Master + Barra Specific Returns = Master")
         self.df = self.df.join(barra_specific_returns, on=["barrid", "date"], how="left")
-        self.df = self.df.join(barra_risk, on=["barrid", "date"], how="left")
 
         # Sort
         self.df = self.df.sort(by=["barrid", "date"])
