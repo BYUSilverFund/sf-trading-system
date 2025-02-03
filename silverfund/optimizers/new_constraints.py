@@ -19,14 +19,6 @@ class FullInvestment(Constraint):
         return [cp.sum(weights) == 1]
 
 
-class NoLeverage(Constraint):
-
-    @staticmethod
-    def construct(**kwargs) -> list[cp.Constraint]:
-        weights: cp.Variable = kwargs.get("weights")
-        return [weights >= 0, weights <= 1, cp.sum(weights) == 1]
-
-
 class ZeroCost(Constraint):
 
     @staticmethod
@@ -58,6 +50,14 @@ class NoBuyingOnMargin(Constraint):
     def construct(**kwargs) -> list[cp.Constraint]:
         weights: cp.Variable = kwargs.get("weights")
         return [weights <= 1]
+
+
+class ShortingLimit(Constraint):
+
+    @staticmethod
+    def construct(**kwargs) -> list[cp.Constraint]:
+        weights: cp.Variable = kwargs.get("weights")
+        return [weights >= -1]
 
 
 class LeverageTarget(Constraint):
