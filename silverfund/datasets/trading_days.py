@@ -13,10 +13,13 @@ from silverfund.enums import Interval
 
 class TradingDays:
 
-    def __init__(self, start_date: date, end_date: date, interval: Interval) -> None:
+    def __init__(
+        self, start_date: date, end_date: date, interval: Interval, quiet: bool = True
+    ) -> None:
         self._start_date = start_date
         self._end_date = end_date
         self._interval = interval
+        self._quiet = quiet
 
         load_dotenv()
 
@@ -33,9 +36,15 @@ class TradingDays:
         # Join all yearly files
         years = range(self._start_date.year, self._end_date.year + 1)
         dfs = []
-        for year in tqdm(years, desc="Loading daily data"):
-            file = f"dsf_{year}.parquet"
-            dfs.append(pl.read_parquet(self._folder / file, columns=["date"]))
+
+        if not self._quiet:
+            for year in tqdm(years, desc="Loading daily data"):
+                file = f"dsf_{year}.parquet"
+                dfs.append(pl.read_parquet(self._folder / file, columns=["date"]))
+        else:
+            for year in years:
+                file = f"dsf_{year}.parquet"
+                dfs.append(pl.read_parquet(self._folder / file, columns=["date"]))
 
         df = pl.concat(dfs)
 
