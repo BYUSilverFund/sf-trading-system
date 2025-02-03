@@ -41,3 +41,11 @@ class UnitBeta(Constraint):
         weights = kwargs.get("weights")
         betas = kwargs.get("betas")
         return [cp.sum(cp.multiply(weights, betas)) == 1]
+
+
+class LongOnly(Constraint):
+
+    @staticmethod
+    def construct(**kwargs) -> list[cp.Constraint]:
+        weights = kwargs.get("weights")
+        return [weights >= 0]

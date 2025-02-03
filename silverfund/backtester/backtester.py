@@ -4,6 +4,7 @@ import polars as pl
 
 from silverfund.components.chunked_data import ChunkedData
 from silverfund.components.enums import Interval
+from silverfund.components.optimizers.new_constraints import Constraint
 from silverfund.components.strategies.strategy import Strategy
 
 
@@ -16,6 +17,7 @@ class Backtester:
         interval: Interval,
         historical_data: pl.DataFrame,
         strategy: Strategy,
+        constraints: list[Constraint],
         security_identifier: str,
     ):
         self.start_date = start_date
@@ -23,6 +25,7 @@ class Backtester:
         self.interval = interval
         self.historical_data = historical_data
         self.strategy = strategy(interval)
+        self.constraints = constraints
         self._security_identifier = security_identifier
 
     def run(self):
@@ -35,7 +38,7 @@ class Backtester:
         )
 
         # Apply strategy
-        portfolios = chunked_data.apply_strategy(self.strategy)
+        portfolios = chunked_data.apply_strategy(self.strategy, self.constraints)
 
         # Concatenate portfolios
         portfolios = pl.concat(portfolios)
