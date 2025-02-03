@@ -104,4 +104,6 @@ class NewRiskModel:
             }
         )
 
+        risk_model = risk_model.fill_nan(0)
+
         return risk_model
