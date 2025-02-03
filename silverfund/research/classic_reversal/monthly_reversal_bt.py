@@ -4,9 +4,9 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 from silverfund.backtester import Backtester
-from silverfund.components.enums import Interval
-from silverfund.components.strategies.reversal_strategy import ReversalStrategy
-from silverfund.datasets import CRSPMonthly
+from silverfund.datasets.crsp_monthly import CRSPMonthly
+from silverfund.enums import Interval
+from silverfund.strategies.reversal_strategy import ReversalStrategy
 
 # Monthly backtest
 start_date = date(2006, 1, 1)

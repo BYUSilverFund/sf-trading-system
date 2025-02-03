@@ -2,7 +2,8 @@ from abc import ABC, abstractmethod
 
 import polars as pl
 
-from silverfund.components.enums import Interval
+from silverfund.enums import Interval
+from silverfund.optimizers.new_constraints import Constraint
 
 
 class Strategy(ABC):
@@ -11,7 +12,7 @@ class Strategy(ABC):
         pass
 
     @abstractmethod
-    def compute_portfolio(self, data: pl.DataFrame) -> pl.DataFrame:
+    def compute_portfolio(self, data: pl.DataFrame, constraints: list[Constraint]) -> pl.DataFrame:
         pass
 
     @property
