@@ -6,17 +6,20 @@ import polars as pl
 from dotenv import load_dotenv
 from tqdm import tqdm
 
-from silverfund.components.enums import Interval
 from silverfund.datasets.crsp_daily import CRSPDaily
 from silverfund.datasets.crsp_monthly import CRSPMonthly
+from silverfund.enums import Interval
 
 
 class TradingDays:
 
-    def __init__(self, start_date: date, end_date: date, interval: Interval) -> None:
+    def __init__(
+        self, start_date: date, end_date: date, interval: Interval, quiet: bool = True
+    ) -> None:
         self._start_date = start_date
         self._end_date = end_date
         self._interval = interval
+        self._quiet = quiet
 
         load_dotenv()
 
@@ -30,24 +33,24 @@ class TradingDays:
         self._files = os.listdir(self._folder)
 
     def load_all(self) -> pl.DataFrame:
+        # Join all yearly files
+        years = range(self._start_date.year, self._end_date.year + 1)
+        dfs = []
 
-        if self._interval == Interval.DAILY:
-            # Join all yearly files
-            years = range(self._start_date.year, self._end_date.year + 1)
-            dfs = []
+        if not self._quiet:
             for year in tqdm(years, desc="Loading daily data"):
                 file = f"dsf_{year}.parquet"
                 dfs.append(pl.read_parquet(self._folder / file, columns=["date"]))
+        else:
+            for year in years:
+                file = f"dsf_{year}.parquet"
+                dfs.append(pl.read_parquet(self._folder / file, columns=["date"]))
 
-            df = pl.concat(dfs)
+        df = pl.concat(dfs)
 
-            return self.clean(df)
+        return self.transform(df)
 
-        elif self._interval == Interval.MONTHLY:
-            df = pl.read_parquet(self._master_file, columns=["date"])
-            return self.clean(df)
-
-    def clean(self, df: pl.DataFrame) -> pl.DataFrame:
+    def _clean(self, df: pl.DataFrame) -> pl.DataFrame:
         # Cast date type
         df = df.with_columns(pl.col("date").dt.date())
 
@@ -58,3 +61,32 @@ class TradingDays:
         df = df.unique().sort("date")
 
         return df
+
+    def transform(self, daily_df: pl.DataFrame) -> pl.DataFrame:
+        daily_df = self._clean(daily_df)
+
+        # Add daily lags
+        daily_df = daily_df.with_columns(
+            pl.col("date").shift(1).alias("date_lag_1d"),
+            pl.col("date").shift(2).alias("date_lag_2d"),
+        )
+
+        if self._interval == Interval.MONTHLY:
+            # Load
+            monthly_df = pl.read_parquet(self._master_file, columns=["date"])
+
+            # Clean
+            monthly_df = self._clean(monthly_df)
+
+            # Merge daily lags
+            monthly_df = monthly_df.join(daily_df, on="date", how="left")
+
+            # Add monthly lags
+            monthly_df = monthly_df.with_columns(
+                pl.col("date").shift(1).alias("date_lag_1m"),
+                pl.col("date").shift(2).alias("date_lag_2m"),
+            )
+
+            return monthly_df
+
+        return daily_df

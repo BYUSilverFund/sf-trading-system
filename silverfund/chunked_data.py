@@ -3,9 +3,10 @@ from datetime import date
 import polars as pl
 from tqdm import tqdm
 
-from silverfund.components.enums import Interval
-from silverfund.components.strategies.strategy import Strategy
 from silverfund.datasets.trading_days import TradingDays
+from silverfund.enums import Interval
+from silverfund.optimizers.new_constraints import Constraint
+from silverfund.strategies.strategy import Strategy
 
 
 class ChunkedData:
@@ -34,10 +35,12 @@ class ChunkedData:
 
         self._chunks: list[pl.DataFrame] = chunks
 
-    def apply_strategy(self, strategy: Strategy) -> list[pl.DataFrame]:
+    def apply_strategy(
+        self, strategy: Strategy, constraints: list[Constraint]
+    ) -> list[pl.DataFrame]:
         portfolios_list = []
         for chunk in tqdm(self._chunks, desc="Running strategy"):
-            portfolios = strategy.compute_portfolio(chunk)
+            portfolios = strategy.compute_portfolio(chunk, constraints)
             if not portfolios.is_empty():
                 portfolios_list.append(portfolios)
         return portfolios_list

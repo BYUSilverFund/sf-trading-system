@@ -6,14 +6,10 @@ from typing import Optional
 import polars as pl
 from dotenv import load_dotenv
 
-from silverfund.database import Database
-
 
 class BarraFactorCovariances:
 
     def __init__(self) -> None:
-        self.db = Database()
-
         load_dotenv()
 
         parts = os.getenv("ROOT").split("/")

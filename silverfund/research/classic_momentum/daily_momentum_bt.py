@@ -4,9 +4,9 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 from silverfund.backtester import Backtester
-from silverfund.components.enums import Interval
-from silverfund.components.strategies.momentum_strategy import MomentumStrategy
 from silverfund.datasets.crsp_daily import CRSPDaily
+from silverfund.enums import Interval
+from silverfund.strategies.momentum_strategy import MomentumStrategy
 
 # Daily backtest
 start_date = date(2022, 1, 1)

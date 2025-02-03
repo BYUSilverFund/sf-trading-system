@@ -13,10 +13,10 @@ import pandas as pd
 import polars as pl
 
 from silverfund.components.alpha import PreComputedAlpha
-from silverfund.components.optimizers import MVPortfolioConstructor
-from silverfund.components.optimizers.constraints import *
 from silverfund.components.risk_model import FactorRiskModel
 from silverfund.datasets.dataio import *
+from silverfund.optimizers import MVPortfolioConstructor
+from silverfund.optimizers.constraints import *
 
 # ------------------------------------------------------------------------------------------------ #
 # Backtest Dates and Universe
