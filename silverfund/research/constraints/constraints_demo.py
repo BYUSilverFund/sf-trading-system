@@ -20,14 +20,14 @@ historical_data = MasterMonthly(
     end_date=end_date,
 ).load_all()
 
-# Create backtest instance
+# Weights between -1 and 1 that sum to 1
 base_bt = Backtester(
     start_date=start_date,
     end_date=end_date,
     interval=Interval.MONTHLY,
     historical_data=historical_data,
     strategy=MomentumZStrategy,
-    constraints=[FullInvestment, NoLeverage],
+    constraints=[FullInvestment, NoBuyingOnMargin, ShortingLimit],
     security_identifier="barrid",
 )
 
@@ -41,14 +41,14 @@ print(pnl)
 # Save
 pnl.write_parquet(f"{results_folder}/base_bt.parquet")
 
-# Create backtest instance
+# Weights between 0 and 1 that sum to 1
 long_only = Backtester(
     start_date=start_date,
     end_date=end_date,
     interval=Interval.MONTHLY,
     historical_data=historical_data,
     strategy=MomentumZStrategy,
-    constraints=[FullInvestment, NoLeverage, LongOnly],
+    constraints=[FullInvestment, NoBuyingOnMargin, LongOnly],
     security_identifier="barrid",
 )
 
@@ -62,14 +62,14 @@ print(pnl)
 # Save
 pnl.write_parquet(f"{results_folder}/long_only_bt.parquet")
 
-# Create backtest instance
+# Weights between 0 and 1 that sum to 1 and have a benchmark beta of 1
 unit_beta = Backtester(
     start_date=start_date,
     end_date=end_date,
     interval=Interval.MONTHLY,
     historical_data=historical_data,
     strategy=MomentumZStrategy,
-    constraints=[FullInvestment, NoLeverage, LongOnly, UnitBeta],
+    constraints=[FullInvestment, NoBuyingOnMargin, LongOnly, UnitBeta],
     security_identifier="barrid",
 )
 
