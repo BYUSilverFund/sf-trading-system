@@ -68,7 +68,7 @@ class MomentumZStrategy(Strategy):
         self, chunk: pl.DataFrame, constraints: list[Constraint]
     ) -> list[pl.DataFrame]:
         chunk = self.compute_alpha(chunk)
-        date_lag = chunk["date"].max()
+        date_lag = chunk["date_lag_1d"].max()
         barrids = chunk["barrid"].unique().to_list()
 
         # Load covariance matrix on prior date

@@ -12,7 +12,7 @@ def qp(
     gamma: float = 2.0,
 ):
     alphas = chunk["alpha"].to_numpy()
-    betas = chunk["predbeta"].to_numpy()
+    betas = chunk["predbeta_lag"].to_numpy()
 
     # Declare variables
     n_assets = len(alphas)
