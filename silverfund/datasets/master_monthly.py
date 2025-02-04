@@ -45,6 +45,9 @@ class MasterMonthly:
             print("Joining Master + Barra Specific Returns = Master")
         self.df = self.df.join(barra_specific_returns, on=["barrid", "date"], how="left")
 
+        # Clean
+        self.df = self._clean_merged(self.df)
+
         # Sort
         self.df = self.df.sort(by=["barrid", "date"])
 
@@ -232,5 +235,15 @@ class MasterMonthly:
 
         # Drop month and sort
         df = df.drop("month").sort(["barrid", "date"])
+
+        return df
+
+    @staticmethod
+    def _clean_merged(df: pl.DataFrame) -> pl.DataFrame:
+        # Fill null values
+        df = df.with_columns(
+            pl.col("predbeta").fill_null(strategy="forward").over("barrid"),
+            pl.col("total_risk").fill_null(strategy="forward").over("barrid"),
+        )
 
         return df
