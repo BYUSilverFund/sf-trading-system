@@ -7,26 +7,29 @@ from silverfund.optimizers.new_constraints import Constraint
 from silverfund.strategies.strategy import Strategy
 
 
-class MomentumZStrategy(Strategy):
+class ReversalZStrategy(Strategy):
     def __init__(self, interval: Interval):
         self._interval = interval
-        self._window = {Interval.DAILY: 252, Interval.MONTHLY: 13}[self._interval]
-        self._rolling_window = {Interval.DAILY: 230, Interval.MONTHLY: 11}[self._interval]
-        self._lag = {Interval.DAILY: 22, Interval.MONTHLY: 2}[self._interval]
+        self._window = {Interval.DAILY: 23, Interval.MONTHLY: 2}[self._interval]
+        self._rolling_window = {Interval.DAILY: 22, Interval.MONTHLY: 1}[self._interval]
+        self._lag = {Interval.DAILY: 1, Interval.MONTHLY: 1}[self._interval]
 
     def compute_signal(self, chunk: pl.DataFrame) -> pl.DataFrame:
-        # Momentum signal formation
+        # Reversal signal formation
         chunk = chunk.with_columns(pl.col("ret").log1p().alias("logret")).with_columns(
             pl.col("logret")
             .rolling_sum(
                 window_size=self._rolling_window, min_periods=self._rolling_window, center=False
             )
             .over("barrid")
-            .alias("mom")
+            .alias("rev")
         )
 
-        # Momentum lag/skip
-        chunk = chunk.with_columns(pl.col("mom").shift(self._lag).over("barrid").alias("mom_lag"))
+        # Negate signal
+        chunk = chunk.with_columns(-pl.col("rev"))
+
+        # Reversal lag/skip
+        chunk = chunk.with_columns(pl.col("rev").shift(self._lag).over("barrid").alias("rev_lag"))
 
         # Lag total_risk
         chunk = chunk.with_columns(
@@ -36,12 +39,12 @@ class MomentumZStrategy(Strategy):
         # Lag predbeta
         chunk = chunk.with_columns(pl.col("predbeta").shift(1).over("barrid").alias("predbeta_lag"))
 
-        # Non-null momentum
-        chunk = chunk.drop_nulls(subset="mom_lag")
+        # Non-null reversal
+        chunk = chunk.drop_nulls(subset="rev_lag")
 
         # Put in percent space
         chunk = chunk.with_columns(
-            pl.col("mom_lag") * 100,
+            pl.col("rev_lag") * 100,
             pl.col("total_risk_lag") * 100,
         )
 
@@ -50,9 +53,9 @@ class MomentumZStrategy(Strategy):
     def compute_score(self, chunk: pl.DataFrame) -> pl.DataFrame:
         chunk = self.compute_signal(chunk)
 
-        # Z-score the momentum signal
+        # Z-score the reversal signal
         chunk = chunk.with_columns(
-            ((pl.col("mom_lag") - pl.col("mom_lag").mean()) / pl.col("mom_lag").std()).alias(
+            ((pl.col("rev_lag") - pl.col("rev_lag").mean()) / pl.col("rev_lag").std()).alias(
                 "score"
             )
         )
