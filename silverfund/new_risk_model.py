@@ -14,6 +14,7 @@ class NewRiskModel:
     def __init__(self, date_: date, barrids: list[str]) -> None:
         self._date = date_
         self._barrids = sorted(barrids)
+        self._risk_model: pl.DataFrame = pl.DataFrame()
 
     def _covariance_matrix(self) -> pl.DataFrame:
         # Load
@@ -106,4 +107,16 @@ class NewRiskModel:
 
         risk_model = risk_model.fill_nan(0)
 
+        self._risk_model = risk_model
+
         return risk_model
+
+    def get_variance_vector(self) -> pl.DataFrame:
+        if self._risk_model.is_empty():
+            raise ValueError("Call `.load()` first.")
+
+        variances = self._risk_model.drop("barrid").to_numpy().diagonal()
+
+        variance_df = pl.DataFrame(data={"barrid": self._barrids, "vol": variances})
+
+        return variance_df

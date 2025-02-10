@@ -14,10 +14,14 @@ from silverfund.enums import Interval
 class TradingDays:
 
     def __init__(
-        self, start_date: date, end_date: date, interval: Interval, quiet: bool = True
+        self,
+        start_date: date | None = None,
+        end_date: date | None = None,
+        interval: Interval = Interval.MONTHLY,
+        quiet: bool = True,
     ) -> None:
-        self._start_date = start_date
-        self._end_date = end_date
+        self._start_date = start_date or date(1995, 7, 31)  # min date in russell history file
+        self._end_date = end_date or date.today()
         self._interval = interval
         self._quiet = quiet
 

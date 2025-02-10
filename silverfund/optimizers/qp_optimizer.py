@@ -12,7 +12,7 @@ def qp(
     gamma: float = 2.0,
 ):
     alphas = chunk["alpha"].to_numpy()
-    betas = chunk["predbeta"].to_numpy()
+    betas = chunk["predbeta_lag"].to_numpy()
 
     # Declare variables
     n_assets = len(alphas)
@@ -34,11 +34,8 @@ def qp(
     # Solve
     problem.solve()
 
-    # Scale weights
-    scaled_weights = weights.value / sum(weights.value)
-
     # Package portfolio
-    portfolio = chunk.with_columns(pl.Series(scaled_weights).alias("weight")).select(
+    portfolio = chunk.with_columns(pl.Series(weights.value).alias("weight")).select(
         ["date", "barrid", "weight"]
     )
 
