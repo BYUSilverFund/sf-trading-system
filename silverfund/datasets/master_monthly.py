@@ -56,15 +56,13 @@ class MasterMonthly:
 
     def _universe(self):
         # Load
-        universe = Universe(start_date=self._start_date, end_date=self._end_date).load()
+        universe = Universe().load()
 
         return universe
 
     def _trading_days(self):
         # Load
-        trading_days = TradingDays(
-            start_date=self._start_date, end_date=self._end_date, interval=Interval.MONTHLY
-        ).load_all()
+        trading_days = TradingDays(interval=Interval.MONTHLY).load_all()
 
         return trading_days
 
@@ -238,8 +236,9 @@ class MasterMonthly:
 
         return df
 
-    @staticmethod
-    def _clean_merged(df: pl.DataFrame) -> pl.DataFrame:
+    def _clean_merged(self, df: pl.DataFrame) -> pl.DataFrame:
+        df = df.filter(pl.col("date").is_between(self._start_date, self._end_date))
+
         # Fill null values
         df = df.with_columns(
             pl.col("predbeta").fill_null(strategy="forward").over("barrid"),

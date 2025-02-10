@@ -58,9 +58,7 @@ class MomentumZStrategy(Strategy):
 
         ic = 0.05
 
-        chunk = chunk.with_columns(
-            (pl.col("total_risk_lag") * pl.col("mom_lag") * ic).alias("alpha")
-        )
+        chunk = chunk.with_columns((pl.col("total_risk_lag") * pl.col("score") * ic).alias("alpha"))
 
         return chunk
 
