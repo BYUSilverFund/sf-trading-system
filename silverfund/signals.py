@@ -42,6 +42,6 @@ def momentum(data: pl.DataFrame) -> Signal:
         .with_columns(pl.col("logret").rolling_sum(11, min_periods=11).over("barrid").alias("mom"))
         .with_columns(pl.col("mom").shift(1).over("barrid"))
         .select(["date", "barrid", "mom"])
-        .sort(["date", "barrid"])
+        .sort(["barrid", "date"])
     )
     return Signal(signals, "mom")

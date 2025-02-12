@@ -44,7 +44,7 @@ def load_total_risk(
         dfs.append(df)
 
     # Concat
-    df = pl.concat(dfs)
+    df: pl.DataFrame = pl.concat(dfs)
 
     # Aggregate
     if interval == Interval.MONTHLY:

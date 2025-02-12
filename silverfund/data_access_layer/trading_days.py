@@ -14,7 +14,6 @@ def load_trading_days(
     start_date: date | None = None,
     end_date: date | None = None,
 ) -> pl.DataFrame:
-
     # Parameters
     start_date = start_date or date(1995, 7, 31)
     end_date = end_date or date.today()
@@ -29,45 +28,28 @@ def load_trading_days(
     daily_files_folder = root_dir / "groups" / "grp_quant" / "data" / "dsf"
     monthly_file = root_dir / "groups" / "grp_quant" / "data" / "msf.parquet"
 
-    # Load daily data
-    years = range(start_date.year, end_date.year + 1)
+    # Load
+    if interval == Interval.DAILY:
+        years = range(start_date.year, end_date.year + 1)
 
-    dfs = []
-    for year in tqdm(years, desc="Loading Trading Days"):
+        dfs = []
+        for year in tqdm(years, desc="Loading Trading Days"):
 
-        file = f"dsf_{year}.parquet"
-        dfs.append(pl.read_parquet(daily_files_folder / file, columns=["date"]))
+            file = f"dsf_{year}.parquet"
+            dfs.append(pl.read_parquet(daily_files_folder / file, columns=["date"]))
 
-    df = pl.concat(dfs)
-
-    # Clean daily data
-    df = clean(df)
-
-    # Add daily lags
-    daily_df = df.with_columns(
-        pl.col("date").shift(1).alias("date_lag_1d"),
-        pl.col("date").shift(2).alias("date_lag_2d"),
-    )
+        df = pl.concat(dfs)
 
     if interval == Interval.MONTHLY:
-        # Load
-        monthly_df = pl.read_parquet(monthly_file, columns=["date"])
+        df = pl.read_parquet(monthly_file, columns=["date"])
 
-        # Clean
-        monthly_df = clean(monthly_df)
+    # Clean
+    df = clean(df)
 
-        # Merge daily lags
-        monthly_df = monthly_df.join(daily_df, on="date", how="left")
+    # Filter
+    df = filter(df, start_date, end_date)
 
-        # Add monthly lags
-        monthly_df = monthly_df.with_columns(
-            pl.col("date").shift(1).alias("date_lag_1m"),
-            pl.col("date").shift(2).alias("date_lag_2m"),
-        )
-
-        return filter(monthly_df, start_date, end_date)
-
-    return filter(daily_df, start_date, end_date)
+    return df
 
 
 def clean(df: pl.DataFrame) -> pl.DataFrame:

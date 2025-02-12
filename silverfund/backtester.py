@@ -72,7 +72,7 @@ class Backtester:
 
             # Get portfolio constructor parameters
             period_barrids = universe.filter(pl.col("date") == period)["barrid"].sort().to_list()
-            period_alphas = Alpha(alphas.filter(pl.col("date") == period))
+            period_alphas = Alpha(alphas.filter(pl.col("date") == period).sort(["barrid"]))
 
             # Construct period portfolio
             portfolio = self._strategy.portfolio_constructor(

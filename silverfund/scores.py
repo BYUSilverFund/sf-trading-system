@@ -38,14 +38,14 @@ class ScoreConstructor(Protocol):
     def __call__(self, signals: Signal, col: str, over: str) -> Score: ...
 
 
-def z_score(signals: Signal, col: str, over: str) -> Score:
+def z_score(signals: Signal, signal_col: str) -> Score:
     return Score(
         signals.with_columns(
-            ((pl.col(col) - pl.col(col).mean().over(over)) / pl.col(col).std().over(over)).alias(
-                "score"
-            )
+            (
+                (pl.col(signal_col) - pl.col(signal_col).mean().over("date"))
+                / pl.col(signal_col).std().over("date")
+            ).alias("score")
         )
-        .fill_nan(0)
         .select(["date", "barrid", "score"])
         .sort(["barrid", "date"])
     )

@@ -6,8 +6,11 @@ import polars as pl
 from dotenv import load_dotenv
 from tqdm import tqdm
 
+from silverfund.enums import Interval
+
 
 def load_barra_returns(
+    interval: Interval,
     start_date: date | None = None,
     end_date: date | None = None,
 ) -> pl.DataFrame:
@@ -42,6 +45,9 @@ def load_barra_returns(
     # Concat
     df = pl.concat(dfs)
 
+    # Aggregate to monthly
+    df = aggregate_to_monthly(df) if interval == Interval.MONTHLY else df
+
     # Filter
     df = df.filter(pl.col("date").is_between(start_date, end_date))
 
@@ -65,5 +71,29 @@ def clean(df: pl.DataFrame):
     df = df.select(
         ["date", "barrid"] + [col for col in sorted(df.columns) if col not in ["date", "barrid"]]
     )
+
+    return df
+
+
+def aggregate_to_monthly(df: pl.DataFrame) -> pl.DataFrame:
+    # Add logret column
+    df = df.with_columns(pl.col("ret").log1p().alias("logret"))
+
+    # Add month column
+    df = df.with_columns(pl.col("date").dt.truncate("1mo").alias("month")).sort(["barrid", "date"])
+
+    df = df.group_by(["month", "barrid"]).agg(
+        pl.col("date").last(),
+        pl.col("currency").last(),
+        pl.col("mktcap").last(),
+        pl.col("price").last(),
+        pl.col("logret").sum(),
+    )
+
+    # Compound up log returns
+    df = df.with_columns((pl.col("logret").exp() - 1).alias("ret"))
+
+    # Drop month
+    df = df.drop("month")
 
     return df

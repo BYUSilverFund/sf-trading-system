@@ -18,7 +18,7 @@ end_date = date(2024, 12, 31)
 
 strategy = Strategy(
     signal_constructor=momentum,
-    score_constructor=partial(z_score, col="mom", over="barrid"),
+    score_constructor=partial(z_score, signal_col="mom"),
     alpha_constructor=grindold_kahn,
     portfolio_constructor=mean_variance_efficient,
     constraints=[full_investment, no_buying_on_margin, long_only, unit_beta],

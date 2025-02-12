@@ -70,7 +70,7 @@ def factor_exposure_matrix_constructor(date_: date, barrids: list[str]) -> pl.Da
     exp_mat = exp_mat.select(
         ["barrid"] + sorted([col for col in exp_mat.columns if col != "barrid"])
     )
-    exp_mat = exp_mat.sort(by="barrid")
+    exp_mat = exp_mat.sort("barrid")
 
     # Fill null values
     exp_mat = exp_mat.fill_null(0)
@@ -87,7 +87,7 @@ def factor_covariance_matrix_constructor(date_: date) -> pl.DataFrame:
 
     # Sort headers and columns
     fc_df = fc_df.select(["factor_1"] + sorted([col for col in fc_df.columns if col != "factor_1"]))
-    fc_df = fc_df.sort(by="factor_1")
+    fc_df = fc_df.sort("factor_1")
 
     # Record factor ids
     factors = fc_df.select("factor_1").to_numpy().flatten()

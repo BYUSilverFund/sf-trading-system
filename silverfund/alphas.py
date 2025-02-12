@@ -56,5 +56,5 @@ def grindold_kahn(scores: Score, ic: float = 0.05) -> Alpha:
         .with_columns(((ic * pl.col("total_risk") * pl.col("score")).alias("alpha")))
         .fill_null(0)
         .select(["date", "barrid", "alpha"])
-        .sort(["date", "barrid"])
+        .sort(["barrid", "date"])
     )
