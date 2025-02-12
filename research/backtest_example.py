@@ -1,10 +1,6 @@
 from datetime import date
 from functools import partial
 
-import matplotlib.pyplot as plt
-import polars as pl
-import seaborn as sns
-
 from silverfund.alphas import grindold_kahn
 from silverfund.backtester import Backtester
 from silverfund.constraints import *
@@ -13,9 +9,11 @@ from silverfund.scores import z_score
 from silverfund.signals import momentum
 from silverfund.strategies import Strategy
 
+# Date range
 start_date = date(2023, 1, 1)
 end_date = date(2024, 12, 31)
 
+# Define strategy
 strategy = Strategy(
     signal_constructor=momentum,
     score_constructor=partial(z_score, signal_col="mom"),
@@ -32,24 +30,4 @@ pnl = bt.run_sequential()
 print("-" * 20 + " Asset Returns " + "-" * 20)
 print(pnl)
 
-# -------------------- Plot --------------------
-daily_returns = (
-    pnl.with_columns((pl.col("weight") * pl.col("fwd_ret")).alias("contribution"))
-    .group_by("date")
-    .agg(pl.col("contribution").sum().alias("portfolio_ret"))
-    .sort("date")
-    .with_columns((pl.col("portfolio_ret") / 100).log1p().cum_sum().alias("portfolio_cumret"))
-    .with_columns(pl.col("portfolio_cumret") * 100)  # put into percent space
-)
-
-# Table
-print("-" * 20 + " Portfolio Returns " + "-" * 20)
-print(daily_returns)
-
-# Chart
-plt.figure(figsize=(10, 6))
-sns.lineplot(data=daily_returns, x="date", y="portfolio_cumret")
-plt.title("Monthly Momentum Backtest")
-plt.xlabel(None)
-plt.ylabel("Cummulative Sum Returns (%)")
-plt.savefig("backtest.png", dpi=300)
+pnl.write_parquet("research/backtest_example.parquet")
