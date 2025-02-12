@@ -40,7 +40,10 @@ class Alpha(pl.DataFrame):
 
 
 def grindold_kahn(score: Score, ic: float = 0.05) -> Alpha:
-    vols = dal.load_risk_forecasts(Interval.MONTHLY)
+    vols = (
+        dal.load_total_risk(Interval.MONTHLY).with_columns("total_risk")
+        * 100  # put in percent space
+    )
     return Alpha(
         score.join(other=vols, on=["date", "barrid"], how="left")
         .with_columns(((ic * pl.col("total_risk") * pl.col("score")).alias("alpha")))

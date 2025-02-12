@@ -1,13 +1,16 @@
 """Module for data access layer"""
 
+from .barra_factor_covariances import load_factor_covariances
+from .barra_factor_exposures import load_factor_exposures
 from .barra_returns import load_barra_returns
-from .barra_risk_forecasts import load_risk_forecasts
+from .barra_specific_risk import load_specific_risk
+from .barra_total_risk import load_total_risk
 from .trading_days import load_trading_days
 from .universe import load_monthly_universe
 
 __all__ = [
     "load_trading_days",
     "load_monthly_universe",
-    "load_risk_forecasts",
+    "load_total_risk",
     "load_barra_returns",
 ]

@@ -9,11 +9,11 @@ from tqdm import tqdm
 from silverfund.enums import Interval
 
 
-def load_risk_forecasts(
+def load_total_risk(
     interval: Interval,
     start_date: date | None = None,
     end_date: date | None = None,
-):
+) -> pl.DataFrame:
     # Parameters
     start_date = start_date or date(1995, 7, 31)
     end_date = end_date or date.today()

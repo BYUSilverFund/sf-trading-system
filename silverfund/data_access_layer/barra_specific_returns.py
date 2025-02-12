@@ -7,10 +7,10 @@ from dotenv import load_dotenv
 from tqdm import tqdm
 
 
-def load_specific_return_forecasts(
+def load_specific_returns(
     start_date: date,
     end_date: date,
-):
+) -> pl.DataFrame:
     # Parameters
     load_dotenv()
     parts = os.getenv("ROOT").split("/")
