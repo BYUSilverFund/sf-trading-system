@@ -13,7 +13,7 @@ from silverfund.scores import z_score
 from silverfund.signals import momentum
 from silverfund.strategies import Strategy
 
-start_date = date(2024, 1, 1)
+start_date = date(2023, 1, 1)
 end_date = date(2024, 12, 31)
 
 strategy = Strategy(
@@ -37,9 +37,9 @@ daily_returns = (
     pnl.with_columns((pl.col("weight") * pl.col("fwd_ret")).alias("contribution"))
     .group_by("date")
     .agg(pl.col("contribution").sum().alias("portfolio_ret"))
+    .sort("date")
     .with_columns((pl.col("portfolio_ret") / 100).log1p().cum_sum().alias("portfolio_cumret"))
     .with_columns(pl.col("portfolio_cumret") * 100)  # put into percent space
-    .sort("date")
 )
 
 # Table

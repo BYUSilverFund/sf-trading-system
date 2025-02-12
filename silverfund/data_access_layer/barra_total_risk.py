@@ -6,6 +6,7 @@ import polars as pl
 from dotenv import load_dotenv
 from tqdm import tqdm
 
+from silverfund.data_access_layer.trading_days import load_trading_days
 from silverfund.enums import Interval
 
 
@@ -46,23 +47,28 @@ def load_total_risk(
     # Concat
     df: pl.DataFrame = pl.concat(dfs)
 
+    monthly_trading_days = load_trading_days(Interval.MONTHLY, start_date, end_date)
     # Aggregate
     if interval == Interval.MONTHLY:
-        df = df.with_columns(pl.col("date").dt.truncate("1mo").alias("month")).sort(
-            ["barrid", "date"]
+        # Add month column to trading days
+        monthly_trading_days = monthly_trading_days.with_columns(
+            pl.col("date").dt.truncate("1mo").alias("month")
         )
 
-        df = df.group_by(["month", "barrid"]).agg(
-            pl.col("date").last(),
+        # Add month column to risk
+        df = df.with_columns(pl.col("date").dt.truncate("1mo").alias("month")).drop("date")
+
+        # Merge on month end trading days
+        df = df.join(monthly_trading_days, on="month", how="left").drop("month")
+
+        # Aggregate to monthly level on date and barrid
+        df = df.group_by(["date", "barrid"]).agg(
             pl.col("div_yield").last(),
             pl.col("total_risk").last(),
             pl.col("spec_risk").last(),
             pl.col("histbeta").last(),
             pl.col("predbeta").last(),
         )
-
-        # Drop month
-        df = df.drop("month")
 
     # Reorder columns
     df = df.select(

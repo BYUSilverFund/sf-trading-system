@@ -5,6 +5,7 @@ from tqdm import tqdm
 
 import silverfund.data_access_layer as dal
 from silverfund.alphas import Alpha
+from silverfund.enums import Interval
 from silverfund.strategies import Strategy
 
 
@@ -49,7 +50,9 @@ class Backtester:
         universe = dal.load_monthly_universe(start_date=self._start_date, end_date=self._end_date)
 
         training_data = universe.join(
-            dal.load_barra_returns(start_date=self._start_date, end_date=self._end_date),
+            dal.load_barra_returns(
+                interval=Interval.MONTHLY, start_date=self._start_date, end_date=self._end_date
+            ),
             on=["date", "barrid"],
             how="left",
         ).sort(["barrid", "date"])

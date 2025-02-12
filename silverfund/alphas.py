@@ -45,7 +45,7 @@ class AlphaConstructor(Protocol):
 
 def grindold_kahn(scores: Score, ic: float = 0.05) -> Alpha:
     start_date = scores["date"].min()
-    end_date = scores["date"].min()
+    end_date = scores["date"].max()
 
     vols = dal.load_total_risk(Interval.MONTHLY, start_date, end_date).with_columns(
         pl.col("total_risk") * 100

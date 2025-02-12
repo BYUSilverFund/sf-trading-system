@@ -70,4 +70,7 @@ def mean_variance_efficient(
     # Find optimal weights
     weights = quadratic_program(alphas, cov_mat, constraints, gamma)
 
-    return Portfolio(pl.DataFrame({"date": period, "barrid": barrids, "weight": weights}))
+    portfolio = pl.DataFrame({"date": period, "barrid": barrids, "weight": weights})
+    portfolio = portfolio.sort(["barrid", "date"])
+
+    return Portfolio(portfolio)
