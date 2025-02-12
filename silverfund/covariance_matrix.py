@@ -30,8 +30,11 @@ class CovarianceMatrix(pl.DataFrame):
         # Initialize
         super().__init__(cov_mat)
 
+    def to_matrix(self):
+        return self.drop("barrid").to_numpy()
 
-def covariance_matrix_constructor(date_: date, barrids: list[str]) -> pl.DataFrame:
+
+def covariance_matrix_constructor(date_: date, barrids: list[str]) -> CovarianceMatrix:
     # Load
     exposures_matrix = factor_exposure_matrix_constructor(date_, barrids).drop("barrid").to_numpy()
     covariance_matrix = factor_covariance_matrix_constructor(date_).drop("factor_1").to_numpy()

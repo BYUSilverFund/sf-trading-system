@@ -1,4 +1,4 @@
-from datetime import date
+from typing import Protocol
 
 import polars as pl
 
@@ -39,13 +39,20 @@ class Alpha(pl.DataFrame):
         return self.select("alpha").to_numpy()
 
 
-def grindold_kahn(score: Score, ic: float = 0.05) -> Alpha:
-    vols = (
-        dal.load_total_risk(Interval.MONTHLY).with_columns("total_risk")
-        * 100  # put in percent space
-    )
+class AlphaConstructor(Protocol):
+    def __call__(self, score: Score) -> Alpha: ...
+
+
+def grindold_kahn(scores: Score, ic: float = 0.05) -> Alpha:
+    start_date = scores["date"].min()
+    end_date = scores["date"].min()
+
+    vols = dal.load_total_risk(Interval.MONTHLY, start_date, end_date).with_columns(
+        pl.col("total_risk") * 100
+    )  # put in percent space
+
     return Alpha(
-        score.join(other=vols, on=["date", "barrid"], how="left")
+        scores.join(other=vols, on=["date", "barrid"], how="left")
         .with_columns(((ic * pl.col("total_risk") * pl.col("score")).alias("alpha")))
         .fill_null(0)
         .select(["date", "barrid", "alpha"])

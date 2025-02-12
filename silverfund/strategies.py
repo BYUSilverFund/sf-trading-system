@@ -1,20 +1,16 @@
 from dataclasses import dataclass
-from typing import Callable
 
-import cvxpy as cp
-import polars as pl
-
-from silverfund.alphas import Alpha
-from silverfund.covariance_matrix import CovarianceMatrix
-from silverfund.optimizers import Portfolio
-from silverfund.scores import Score
-from silverfund.signals import Signal
+from silverfund.alphas import AlphaConstructor
+from silverfund.constraints import ConstraintConstructor
+from silverfund.portfolios import PortfolioConstructor
+from silverfund.scores import ScoreConstructor
+from silverfund.signals import SignalConstructor
 
 
 @dataclass
 class Strategy:
-    signal_fn: Callable[[pl.DataFrame], Signal]
-    score_fn: Callable[[Signal], Score]
-    alpha_fn: Callable[[Score], Alpha]
-    optimizer: Callable[[Alpha, CovarianceMatrix, list[cp.Variable], float], Portfolio]
-    constraints: list[cp.Constraint]
+    signal_constructor: SignalConstructor
+    score_constructor: ScoreConstructor
+    alpha_constructor: AlphaConstructor
+    portfolio_constructor: PortfolioConstructor
+    constraints: list[ConstraintConstructor]

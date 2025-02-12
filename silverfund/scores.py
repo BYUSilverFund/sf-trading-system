@@ -1,3 +1,5 @@
+from typing import Protocol
+
 import polars as pl
 
 from silverfund.signals import Signal
@@ -32,14 +34,18 @@ class Score(pl.DataFrame):
         super().__init__(scores)
 
 
-def z_score(signal: Signal, col: str, over: str) -> Score:
+class ScoreConstructor(Protocol):
+    def __call__(self, signals: Signal, col: str, over: str) -> Score: ...
+
+
+def z_score(signals: Signal, col: str, over: str) -> Score:
     return Score(
-        signal.with_columns(
+        signals.with_columns(
             ((pl.col(col) - pl.col(col).mean().over(over)) / pl.col(col).std().over(over)).alias(
                 "score"
             )
         )
-        .fill_null(0)
+        .fill_nan(0)
         .select(["date", "barrid", "score"])
         .sort(["barrid", "date"])
     )

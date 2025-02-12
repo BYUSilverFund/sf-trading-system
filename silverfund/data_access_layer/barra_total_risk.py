@@ -10,9 +10,10 @@ from silverfund.enums import Interval
 
 
 def load_total_risk(
-    interval: Interval,
+    interval: Interval = Interval.MONTHLY,
     start_date: date | None = None,
     end_date: date | None = None,
+    quiet: bool = True,
 ) -> pl.DataFrame:
     # Parameters
     start_date = start_date or date(1995, 7, 31)
@@ -30,7 +31,7 @@ def load_total_risk(
     years = range(start_date.year, end_date.year + 1)
 
     dfs = []
-    for year in tqdm(years, desc="Loading Barra Risk Forecasts"):
+    for year in tqdm(years, desc="Loading Barra Total Risk", disable=quiet):
         file = f"asset_{year}.parquet"
 
         # Load
