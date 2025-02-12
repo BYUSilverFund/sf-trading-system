@@ -1,7 +1,9 @@
 from datetime import date
+from functools import partial
 
 import polars as pl
 
+import silverfund.data_access_layer as dal
 from silverfund.alphas import grindold_kahn
 from silverfund.backtester import Backtester
 from silverfund.constraints import full_investment
@@ -13,14 +15,9 @@ from silverfund.strategies import Strategy
 start_date = date(2020, 1, 1)
 end_date = date(2024, 12, 31)
 
-
-class Vols(pl.DataFrame):
-    pass
-
-
 strat = Strategy(
     signal_fn=momentum,
-    score_fn=z_score,
+    score_fn=partial(z_score, col="mom", over="barrid"),
     alpha_fn=grindold_kahn,
     optimizer=quadratic_program,
     constraints=[full_investment],

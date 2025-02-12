@@ -6,7 +6,32 @@ from silverfund.covariance_matrix import CovarianceMatrix
 
 
 class Portfolio(pl.DataFrame):
-    pass
+    def __init__(self, portfolios: pl.DataFrame) -> None:
+        expected_order = ["date", "barrid", "weight"]
+
+        valid_schema = {
+            "date": pl.Date,
+            "barrid": pl.String,
+            "weight": pl.Float64,
+        }
+
+        # Check if all required columns exist
+        if set(expected_order) != set(portfolios.columns):
+            missing = set(expected_order) - set(portfolios.columns)
+            raise ValueError(f"Missing required columns: {missing}")
+
+        # Ensure correct column types
+        for col, dtype in valid_schema.items():
+            if portfolios.schema[col] != dtype:
+                raise ValueError(
+                    f"Column {col} has incorrect type: {portfolios.schema[col]}, expected: {dtype}"
+                )
+
+        # Reorder columns
+        portfolios = portfolios.select(expected_order)
+
+        # Initialize
+        super().__init__(portfolios)
 
 
 def quadratic_program(
