@@ -51,29 +51,33 @@ def covariance_matrix_constructor(date_: date, barrids: list[str]) -> Covariance
         }
     )
 
-    covariance_matrix = covariance_matrix.fill_nan(0)
-
     return CovarianceMatrix(covariance_matrix, barrids=barrids, date_=date_)
 
 
 def factor_exposure_matrix_constructor(date_: date, barrids: list[str]) -> pl.DataFrame:
+    # Barrids
+    barrids_df = pl.DataFrame({"barrid": barrids})
+
     # Load
     bfe = dal.load_factor_exposures(date_)
 
+    # Factors
+    factors = bfe["factor"].unique().sort().to_list()
+
     # Filter
-    bfe = bfe.filter(pl.col("barrid").is_in(barrids))
+    bfe = barrids_df.join(bfe, how="left", on="barrid").fill_null(0)
 
     # Pivot
     exp_mat = bfe.pivot(on="factor", index="barrid", values="exposure")
 
-    # Sort headers and rows
-    exp_mat = exp_mat.select(
-        ["barrid"] + sorted([col for col in exp_mat.columns if col != "barrid"])
-    )
-    exp_mat = exp_mat.sort("barrid")
-
-    # Fill null values
+    # Fill null
     exp_mat = exp_mat.fill_null(0)
+
+    # Reorder columns
+    exp_mat = exp_mat.select(["barrid"] + factors)
+
+    # Sort
+    exp_mat = exp_mat.sort("barrid")
 
     return exp_mat
 
@@ -104,18 +108,20 @@ def factor_covariance_matrix_constructor(date_: date) -> pl.DataFrame:
         }
     )
 
-    # Fill NaN values
-    cov_mat = cov_mat.fill_nan(0)
-
     return cov_mat
 
 
 def specific_risk_matrix(date_: date, barrids: list[str]) -> pl.DataFrame:
+    # Barrids
+    barrids_df = pl.DataFrame({"barrid": barrids})
+
     # Load
     sr_df = dal.load_specific_risk(date_)
 
     # Filter
-    sr_df = sr_df.filter(pl.col("barrid").is_in(barrids))
+    sr_df = barrids_df.join(sr_df, on=["barrid"], how="left").fill_null(
+        0
+    )  # ask Brandon about this.
 
     # Convert vector to diagonal matrix
     diagonal = np.power(np.diag(sr_df["specific_risk"]), 2)
