@@ -11,7 +11,7 @@ from silverfund.strategies import Strategy
 
 if __name__ == "__main__":
     # Date range
-    start_date = date(1999, 7, 1)
+    start_date = date(1995, 7, 1)
     end_date = date(2024, 12, 31)
 
     # Define strategy
