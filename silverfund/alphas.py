@@ -43,11 +43,11 @@ class AlphaConstructor(Protocol):
     def __call__(self, score: Score) -> Alpha: ...
 
 
-def grindold_kahn(scores: Score, ic: float = 0.05) -> Alpha:
+def grindold_kahn(scores: Score, interval: Interval, ic: float = 0.05) -> Alpha:
     start_date = scores["date"].min()
     end_date = scores["date"].max()
 
-    vols = dal.load_total_risk(Interval.MONTHLY, start_date, end_date).with_columns(
+    vols = dal.load_total_risk(interval, start_date, end_date).with_columns(
         pl.col("total_risk") * 100
     )  # put in percent space
 
@@ -58,3 +58,7 @@ def grindold_kahn(scores: Score, ic: float = 0.05) -> Alpha:
         .select(["date", "barrid", "alpha"])
         .sort(["barrid", "date"])
     )
+
+
+def static_alpha(scores: Score, universe: pl.DataFrame, value: float) -> Alpha:
+    return Alpha(universe.with_columns(pl.lit(value).cast(pl.Float64).alias("alpha")))

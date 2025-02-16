@@ -11,7 +11,7 @@ from silverfund.enums import Interval
 
 
 def load_total_risk(
-    interval: Interval = Interval.MONTHLY,
+    interval: Interval,
     start_date: date | None = None,
     end_date: date | None = None,
     quiet: bool = True,

@@ -5,6 +5,7 @@ import cvxpy as cp
 import polars as pl
 
 import silverfund.data_access_layer as dal
+from silverfund.enums import Interval
 
 
 class ConstraintConstructor(Protocol):
@@ -23,12 +24,16 @@ def long_only(weights: cp.Variable, date_: date, barrids: list[str]) -> cp.Const
     return weights >= 0
 
 
-def unit_beta(weights: cp.Variable, date_: date, barrids: list[str]) -> cp.Constraint:
+def unit_beta(
+    weights: cp.Variable, date_: date, barrids: list[str], interval: Interval
+) -> cp.Constraint:
     # Cast to polars dataframe
     barrids_df = pl.DataFrame({"barrid": barrids})
 
     # Create betas dataframe
-    betas_df = dal.load_total_risk(start_date=date_, end_date=date_).select(["barrid", "predbeta"])
+    betas_df = dal.load_total_risk(interval=interval, start_date=date_, end_date=date_).select(
+        ["barrid", "predbeta"]
+    )
 
     # Filter on universe, fill null with mean, and cast to np vector
     betas = (

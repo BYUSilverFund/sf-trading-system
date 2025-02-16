@@ -108,6 +108,9 @@ def factor_covariance_matrix_constructor(date_: date) -> pl.DataFrame:
         }
     )
 
+    # Fill NaN (from Barra)
+    cov_mat = cov_mat.fill_nan(0)
+
     return cov_mat
 
 
