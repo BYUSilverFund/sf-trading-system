@@ -24,12 +24,17 @@ def long_only(weights: cp.Variable, date_: date, barrids: list[str]) -> cp.Const
 
 
 def unit_beta(weights: cp.Variable, date_: date, barrids: list[str]) -> cp.Constraint:
+    # Cast to polars dataframe
+    barrids_df = pl.DataFrame({"barrid": barrids})
+
+    # Create betas dataframe
+    betas_df = dal.load_total_risk(start_date=date_, end_date=date_).select(["barrid", "predbeta"])
+
+    # Filter on universe, fill null with mean, and cast to np vector
     betas = (
-        dal.load_total_risk(start_date=date_, end_date=date_)
-        .filter(pl.col("barrid").is_in(barrids))
-        .select(["date", "barrid", "predbeta"])
-        .sort(["barrid", "date"])
+        barrids_df.join(betas_df, how="left", on="barrid")
+        .fill_null(strategy="mean")["predbeta"]
+        .to_list()
     )
 
-    betas = betas["predbeta"].to_list()
     return cp.sum(cp.multiply(weights, betas)) == 1
