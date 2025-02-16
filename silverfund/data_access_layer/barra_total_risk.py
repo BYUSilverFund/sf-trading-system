@@ -104,3 +104,5 @@ def aggregate_to_monthly(df: pl.DataFrame, start_date: date, end_date: date) -> 
         pl.col("histbeta").last(),
         pl.col("predbeta").last(),
     )
+
+    return df

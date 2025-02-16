@@ -66,7 +66,11 @@ def load_crsp(
         df = pl.concat(dfs)
 
     if interval == Interval.MONTHLY:
+        # Load
         df = pl.read_parquet(monthly_file)
+
+        # Clean
+        df = clean(df)
 
     # Filter
     df = df.filter(pl.col("date").is_between(start_date, end_date))
