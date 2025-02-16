@@ -6,6 +6,7 @@ import polars as pl
 from dotenv import load_dotenv
 from tqdm import tqdm
 
+from silverfund.data_access_layer.trading_days import load_trading_days
 from silverfund.enums import Interval
 
 
@@ -47,7 +48,7 @@ def load_barra_returns(
 
     # Aggregate to monthly
     if interval == Interval.MONTHLY:
-        df = aggregate_to_monthly(df) if interval == Interval.MONTHLY else df
+        df = aggregate_to_monthly(df, start_date, end_date)
 
     # Filter
     df = df.filter(pl.col("date").is_between(start_date, end_date))
@@ -76,15 +77,24 @@ def clean(df: pl.DataFrame):
     return df
 
 
-def aggregate_to_monthly(df: pl.DataFrame) -> pl.DataFrame:
+def aggregate_to_monthly(df: pl.DataFrame, start_date: date, end_date: date) -> pl.DataFrame:
+    # Add month column to trading days
+    monthly_trading_days = load_trading_days(Interval.MONTHLY, start_date, end_date)
+    monthly_trading_days = monthly_trading_days.with_columns(
+        pl.col("date").dt.truncate("1mo").alias("month")
+    )
+
+    # Add month column to df
+    df = df.with_columns(pl.col("date").dt.truncate("1mo").alias("month")).drop("date")
+
+    # Merge on month end trading days
+    df = df.join(monthly_trading_days, on="month", how="left").drop("month")
+
     # Add logret column
     df = df.with_columns(pl.col("ret").log1p().alias("logret"))
 
-    # Add month column
-    df = df.with_columns(pl.col("date").dt.truncate("1mo").alias("month")).sort(["barrid", "date"])
-
-    df = df.group_by(["month", "barrid"]).agg(
-        pl.col("date").last(),
+    # Aggregate
+    df = df.group_by(["date", "barrid"]).agg(
         pl.col("currency").last(),
         pl.col("mktcap").last(),
         pl.col("price").last(),
@@ -93,8 +103,5 @@ def aggregate_to_monthly(df: pl.DataFrame) -> pl.DataFrame:
 
     # Compound up log returns
     df = df.with_columns((pl.col("logret").exp() - 1).alias("ret"))
-
-    # Drop month
-    df = df.drop("month")
 
     return df

@@ -47,28 +47,9 @@ def load_total_risk(
     # Concat
     df: pl.DataFrame = pl.concat(dfs)
 
-    monthly_trading_days = load_trading_days(Interval.MONTHLY, start_date, end_date)
     # Aggregate
     if interval == Interval.MONTHLY:
-        # Add month column to trading days
-        monthly_trading_days = monthly_trading_days.with_columns(
-            pl.col("date").dt.truncate("1mo").alias("month")
-        )
-
-        # Add month column to risk
-        df = df.with_columns(pl.col("date").dt.truncate("1mo").alias("month")).drop("date")
-
-        # Merge on month end trading days
-        df = df.join(monthly_trading_days, on="month", how="left").drop("month")
-
-        # Aggregate to monthly level on date and barrid
-        df = df.group_by(["date", "barrid"]).agg(
-            pl.col("div_yield").last(),
-            pl.col("total_risk").last(),
-            pl.col("spec_risk").last(),
-            pl.col("histbeta").last(),
-            pl.col("predbeta").last(),
-        )
+        df = aggregate_to_monthly(df, start_date, end_date)
 
     # Reorder columns
     df = df.select(
@@ -100,3 +81,26 @@ def clean(df: pl.DataFrame) -> pl.DataFrame:
     )
 
     return df
+
+
+def aggregate_to_monthly(df: pl.DataFrame, start_date: date, end_date: date) -> pl.DataFrame:
+    # Add month column to trading days
+    monthly_trading_days = load_trading_days(Interval.MONTHLY, start_date, end_date)
+    monthly_trading_days = monthly_trading_days.with_columns(
+        pl.col("date").dt.truncate("1mo").alias("month")
+    )
+
+    # Add month column to df
+    df = df.with_columns(pl.col("date").dt.truncate("1mo").alias("month")).drop("date")
+
+    # Merge on month end trading days
+    df = df.join(monthly_trading_days, on="month", how="left").drop("month")
+
+    # Aggregate to monthly level on date and barrid
+    df = df.group_by(["date", "barrid"]).agg(
+        pl.col("div_yield").last(),
+        pl.col("total_risk").last(),
+        pl.col("spec_risk").last(),
+        pl.col("histbeta").last(),
+        pl.col("predbeta").last(),
+    )

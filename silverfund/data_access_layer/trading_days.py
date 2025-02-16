@@ -13,6 +13,7 @@ def load_trading_days(
     interval: Interval,
     start_date: date | None = None,
     end_date: date | None = None,
+    quiet: bool = True,
 ) -> pl.DataFrame:
     # Parameters
     start_date = start_date or date(1995, 7, 31)
@@ -33,7 +34,7 @@ def load_trading_days(
         years = range(start_date.year, end_date.year + 1)
 
         dfs = []
-        for year in tqdm(years, desc="Loading Trading Days"):
+        for year in tqdm(years, desc="Loading Trading Days", disable=quiet):
 
             file = f"dsf_{year}.parquet"
             dfs.append(pl.read_parquet(daily_files_folder / file, columns=["date"]))

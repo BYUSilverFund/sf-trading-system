@@ -7,17 +7,18 @@ from silverfund.data_access_layer.trading_days import load_trading_days
 from silverfund.enums import Interval
 
 
-def load_monthly_universe(start_date: date | None = None, end_date: date | None = None):
+def load_universe(
+    interval: Interval,
+    start_date: date | None = None,
+    end_date: date | None = None,
+    quiet: bool = True,
+):
     # Parameters
     start_date = start_date or date(1995, 7, 31)
     end_date = end_date or date.today()
 
     # Load trading days
-    trading_days = load_trading_days(
-        interval=Interval.MONTHLY,
-        start_date=start_date,
-        end_date=end_date,
-    ).select("date")
+    trading_days = load_trading_days(interval, quiet=quiet).select("date")
 
     # Load russell constituents
     russell = load_russell_constituents()

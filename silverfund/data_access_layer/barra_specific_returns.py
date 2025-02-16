@@ -6,8 +6,12 @@ import polars as pl
 from dotenv import load_dotenv
 from tqdm import tqdm
 
+from silverfund.data_access_layer.trading_days import load_trading_days
+from silverfund.enums import Interval
+
 
 def load_specific_returns(
+    interval: Interval,
     start_date: date,
     end_date: date,
 ) -> pl.DataFrame:
@@ -36,10 +40,14 @@ def load_specific_returns(
         dfs.append(df)
 
     # Concat
-    dfs = pl.concat(dfs)
+    df = pl.concat(dfs)
+
+    # Aggregate to monthly
+    if interval == Interval.MONTHLY:
+        df = aggregate_to_monthly(df, start_date, end_date)
 
     # Filter
-    dfs = dfs.filter(pl.col("date").is_between(start_date, end_date))
+    df = df.filter(pl.col("date").is_between(start_date, end_date))
 
     # Sort
     df = df.sort(by=["date", "barrid"])
@@ -61,5 +69,38 @@ def clean(df: pl.DataFrame) -> pl.DataFrame:
     df = df.select(
         ["date", "barrid"] + [col for col in sorted(df.columns) if col not in ["date", "barrid"]]
     )
+
+    return df
+
+
+def aggregate_to_monthly(df: pl.DataFrame, start_date: date, end_date: date) -> pl.DataFrame:
+    # Add month column to trading days
+    monthly_trading_days = load_trading_days(Interval.MONTHLY, start_date, end_date)
+    monthly_trading_days = monthly_trading_days.with_columns(
+        pl.col("date").dt.truncate("1mo").alias("month")
+    )
+
+    # Add month column to df
+    df = df.with_columns(pl.col("date").dt.truncate("1mo").alias("month")).drop("date")
+
+    # Merge on month end trading days
+    df = df.join(monthly_trading_days, on="month", how="left").drop("month")
+
+    # Add logret column
+    df = df.with_columns(pl.col("spec_ret").log1p().alias("log_spec_ret"))
+
+    # Aggregate
+    df = df.group_by(["date", "barrid"]).agg(
+        pl.col("log_spec_ret").sum(),
+    )
+
+    # Compound up log returns
+    df = df.with_columns((pl.col("log_spec_ret").exp() - 1).alias("spec_ret"))
+
+    # Reorder columns
+    df = df.select(["date", "barrid", "spec_ret"])
+
+    # Sort
+    df = df.sort(["barrid", "date"])
 
     return df
