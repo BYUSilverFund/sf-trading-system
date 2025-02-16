@@ -46,7 +46,8 @@ def load_barra_returns(
     df = pl.concat(dfs)
 
     # Aggregate to monthly
-    df = aggregate_to_monthly(df) if interval == Interval.MONTHLY else df
+    if interval == Interval.MONTHLY:
+        df = aggregate_to_monthly(df) if interval == Interval.MONTHLY else df
 
     # Filter
     df = df.filter(pl.col("date").is_between(start_date, end_date))
