@@ -40,33 +40,28 @@ class ProfitAndLoss(pl.DataFrame):
 
 
 class Backtester:
-    def __init__(self, start_date: date, end_date: date, strategy: Strategy):
+    def __init__(self, interval: Interval, start_date: date, end_date: date, data: pl.DataFrame):
+        self._interval = interval
         self._start_date = start_date
         self._end_date = end_date
-        self._strategy = strategy
+        self._data = data
 
-    def run_sequential(self) -> ProfitAndLoss:
+    def run_sequential(self, strategy: Strategy) -> ProfitAndLoss:
         # Universe, training_data, and testing_data will all be parameters in the future.
-        universe = dal.load_monthly_universe(start_date=self._start_date, end_date=self._end_date)
-
-        training_data = universe.join(
-            dal.load_barra_returns(
-                interval=Interval.MONTHLY, start_date=self._start_date, end_date=self._end_date
-            ),
-            on=["date", "barrid"],
-            how="left",
-        ).sort(["barrid", "date"])
+        universe = dal.load_universe(
+            interval=self._interval, start_date=self._start_date, end_date=self._end_date
+        )
 
         testing_data = (
-            training_data.with_columns((pl.col("ret").shift(-1) * 100).alias("fwd_ret"))
+            self._data.with_columns((pl.col("ret").shift(-1) * 100).alias("fwd_ret"))
             .select(["date", "barrid", "fwd_ret"])
             .sort(["barrid", "date"])
         )
 
         # Calculate signals, scores, and alphas
-        signals = self._strategy.signal_constructor(training_data)
-        scores = self._strategy.score_constructor(signals)
-        alphas = self._strategy.alpha_constructor(scores)
+        signals = strategy.signal_constructor(self._data)
+        scores = strategy.score_constructor(signals)
+        alphas = strategy.alpha_constructor(scores)
 
         # Get unique periods
         periods = universe["date"].unique().sort().to_list()
@@ -78,11 +73,11 @@ class Backtester:
             period_alphas = Alpha(alphas.filter(pl.col("date") == period).sort(["barrid"]))
 
             # Construct period portfolio
-            portfolio = self._strategy.portfolio_constructor(
+            portfolio = strategy.portfolio_constructor(
                 period=period,
                 barrids=period_barrids,
                 alphas=period_alphas,
-                constraints=self._strategy.constraints,
+                constraints=strategy.constraints,
             )
             portfolios.append(portfolio)
 
