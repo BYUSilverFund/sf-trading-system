@@ -35,6 +35,6 @@ def quadratic_program(
     problem = cp.Problem(objective=objective, constraints=constraints)
 
     # Solve
-    problem.solve()
+    problem.solve(solver=cp.OSQP)
 
     return weights.value
