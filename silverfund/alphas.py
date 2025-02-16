@@ -60,5 +60,5 @@ def grindold_kahn(scores: Score, interval: Interval, ic: float = 0.05) -> Alpha:
     )
 
 
-def static_alpha(scores: Score, universe: pl.DataFrame, value: float) -> Alpha:
-    return Alpha(universe.with_columns(pl.lit(value).cast(pl.Float64).alias("alpha")))
+def static_alpha(scores: Score, value: float) -> Alpha:
+    return Alpha(scores.with_columns(pl.lit(value).cast(pl.Float64).alias("alpha")).drop("score"))
