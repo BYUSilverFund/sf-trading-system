@@ -4,17 +4,18 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 from silverfund.backtester import Backtester
-from silverfund.components.enums import Interval
-from silverfund.components.strategies.reversal_z_strategy import ReversalZStrategy
+from silverfund.enums import Interval
+from silverfund.strategies.reversal_z_strategy import ReversalZStrategy
 from silverfund.datasets.master_monthly import MasterMonthly
+from silverfund.optimizers.new_constraints import *
 
 # Monthly backtest
-# start_date = date(1995, 7, 31)
-start_date = date(2017, 12, 31)
-end_date = date(2024, 12, 31)
-
-# start_date = date(2024, 10, 31)
+#start_date = date(1995, 7, 31) #full sample
+# start_date = date(2017, 12, 31) # 7 years
 # end_date = date(2024, 12, 31)
+
+start_date = date(2024, 1, 31) #test optimizer
+end_date = date(2024, 12, 31)
 
 # Load historical dataset
 historical_data = (
@@ -23,19 +24,6 @@ historical_data = (
         end_date=end_date,
     )
     .load_all()
-    .select(
-        [
-            "date",
-            "barrid",
-            "mktcap",
-            "div_yield",
-            "price",
-            "ret",
-            "total_risk",
-            "spec_risk",
-            "log_spec_ret",
-        ]
-    )
 )
 
 # Create backtest instance
@@ -46,6 +34,7 @@ bt = Backtester(
     historical_data=historical_data,
     strategy=ReversalZStrategy,
     security_identifier="barrid",
+    constraints=[FullInvestment, NoBuyingOnMargin, ShortingLimit]
 )
 
 # Run backtest
@@ -62,6 +51,11 @@ print(pnl)
 
 # results_folder = "/Users/bwaits/Research/sf-trading-system/reversal_research"
 
+
 pnl.write_parquet(
-    f"/home/bwaits/Research/sf-trading-system/reversal_research/monthly_optimized_reversal_bt_7yr_redo.parquet"
+    f"/home/bwaits/Research/sf-trading-system/reversal_research/test_optimizer_neg1.parquet"
 )
+
+# pnl.write_parquet(
+#     f"/home/bwaits/Research/sf-trading-system/reversal_research/test_optimizer_rev_score_fake.parquet"
+# )
