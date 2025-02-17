@@ -53,7 +53,7 @@ class Backtester:
         )
 
         testing_data = (
-            self._data.with_columns((pl.col("ret").shift(-1) * 100).alias("fwd_ret"))
+            self._data.with_columns((pl.col("ret").shift(-1) * 100).over("barrid").alias("fwd_ret"))
             .select(["date", "barrid", "fwd_ret"])
             .sort(["barrid", "date"])
         )
