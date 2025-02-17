@@ -52,15 +52,17 @@ class ReversalZStrategy(Strategy):
 
         ic = 0.05
 
-        #chunk = chunk.with_columns((pl.col("total_risk") * - pl.col("rev") * ic).alias("alpha"))
-        #chunk = chunk.with_columns((pl.col("total_risk") * pl.col("rev") * ic).alias("alpha"))
-        #chunk = chunk.with_columns((pl.col("total_risk") * - pl.col("score") * ic).alias("alpha"))
-        #chunk = chunk.with_columns((pl.col("total_risk") * 1 * ic).alias("alpha"))
+        # chunk = chunk.with_columns((pl.col("total_risk") * - pl.col("rev") * ic).alias("alpha"))
+        # chunk = chunk.with_columns((pl.col("total_risk") * pl.col("rev") * ic).alias("alpha"))
+        # chunk = chunk.with_columns((pl.col("total_risk") * - pl.col("score") * ic).alias("alpha"))
+        # chunk = chunk.with_columns((pl.col("total_risk") * 1 * ic).alias("alpha"))
         chunk = chunk.with_columns((pl.col("total_risk") * -1 * ic).alias("alpha"))
 
         return chunk
 
-    def compute_portfolio(self, chunk: pl.DataFrame, constraints: list[Constraint]) -> list[pl.DataFrame]:
+    def compute_portfolio(
+        self, chunk: pl.DataFrame, constraints: list[Constraint]
+    ) -> list[pl.DataFrame]:
         chunk = self.compute_alpha(chunk)
         date_lag = chunk["date"].max()
         barrids = chunk["barrid"].unique().to_list()

@@ -4,9 +4,9 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 from silverfund.backtester import Backtester
+from silverfund.datasets.crsp_monthly import CRSPMonthly
 from silverfund.enums import Interval
 from silverfund.strategies.momentum_strategy import MomentumStrategy
-from silverfund.datasets.crsp_monthly import CRSPMonthly
 
 # Monthly backtest
 start_date = date(1995, 7, 31)
@@ -23,7 +23,14 @@ historical_data = (
 )
 
 # Create backtest instance
-bt = Backtester(start_date=start_date, end_date=end_date, interval=Interval.MONTHLY, historical_data=historical_data, strategy=MomentumStrategy, security_identifier="permno")
+bt = Backtester(
+    start_date=start_date,
+    end_date=end_date,
+    interval=Interval.MONTHLY,
+    historical_data=historical_data,
+    strategy=MomentumStrategy,
+    security_identifier="permno",
+)
 
 # Run backtest
 pnl = bt.run()
