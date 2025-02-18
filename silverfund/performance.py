@@ -202,7 +202,7 @@ class Performance:
         # Create data rows for the table
         data = [
             [
-                "Expected Return",
+                "Return",
                 f"{self.expected_return:.2%}",
                 f"{self.expected_benchmark_return:.2%}",
                 f"{self.expected_alpha:.2%}",
@@ -215,8 +215,8 @@ class Performance:
             ],
             ["Sharpe Ratio", f"{self.sharpe_ratio:.2f}", "", ""],
             ["Information Ratio", f"{self.information_ratio:.2f}", "", ""],
-            ["Total Beta", f"{self.tota_beta:.2f}", "", ""],
-            ["Total Alpha", f"{self.tota_alpha:.2%}", "", ""],
+            ["Beta", f"{self.tota_beta:.2f}", "", ""],
+            ["Alpha", f"{self.tota_alpha:.2%}", "", ""],
         ]
 
         # Define headers
@@ -244,17 +244,3 @@ class Performance:
 
     def __str__(self) -> str:
         return self.summary()
-
-
-if __name__ == "__main__":
-    data = pl.read_parquet("research/backtest_example.parquet")
-    asset_returns = AssetReturns(data)
-
-    p = Performance(
-        start_date=date(2023, 1, 1),
-        end_date=date(2023, 12, 31),
-        interval=Interval.MONTHLY,
-        asset_returns=asset_returns,
-    )
-
-    print(p)

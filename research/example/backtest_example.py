@@ -46,4 +46,4 @@ if __name__ == "__main__":
     print("-" * 20 + " Asset Returns " + "-" * 20)
     print(asset_returns)
 
-    asset_returns.write_parquet("research/example/example_results/backtest_example.parquet")
+    asset_returns.write_parquet("research/example/results/backtest_example.parquet")
