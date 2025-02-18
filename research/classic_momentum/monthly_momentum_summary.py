@@ -6,24 +6,24 @@ from silverfund.enums import Compounding, Interval
 from silverfund.performance import Performance
 from silverfund.records import AssetReturns
 
-folder = "research/example/results/"
+folder = "research/classic_momentum/results/"
 
 # Asset returns (result of backtester)
-data_file_path = folder + "backtest_example.parquet"
+data_file_path = folder + "monthly_momentum_bt.parquet"
 asset_returns = AssetReturns(returns=pl.read_parquet(data_file_path))
 
 # Performance instance
 performance = Performance(
-    start_date=date(2023, 1, 1),
-    end_date=date(2023, 12, 31),
+    start_date=date(2001, 1, 1),
+    end_date=date(2020, 12, 31),
     interval=Interval.MONTHLY,
     asset_returns=asset_returns,
     annualize=True,
 )
 
 # Chart
-title = "Example Monthly Backtest"
-decomposed_plot_file_path = folder + "backtest_example_decomposed.png"
+title = "Monthly Momentum Backtest"
+decomposed_plot_file_path = folder + "monthly_momentum.png"
 performance.plot_returns(
     compounding=Compounding.SUM,
     title=title,
@@ -32,7 +32,7 @@ performance.plot_returns(
 )
 
 # Table
-summary_file_path = folder + "backtest_example_summary.txt"
+summary_file_path = folder + "monthly_momentum.txt"
 performance.summary(summary_file_path)
 
 # Print summary
