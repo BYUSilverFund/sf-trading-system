@@ -6,7 +6,7 @@ from silverfund.enums import Compounding, Interval
 from silverfund.performance import Performance
 from silverfund.records import AssetReturns
 
-folder = "research/example_results/"
+folder = "research/example/example_results/"
 
 # Asset returns (result of backtester)
 data_file_path = folder + "backtest_example.parquet"
