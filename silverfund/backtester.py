@@ -4,39 +4,9 @@ import polars as pl
 from tqdm import tqdm
 
 import silverfund.data_access_layer as dal
-from silverfund.alphas import Alpha
 from silverfund.enums import Interval
+from silverfund.records import Alpha, AssetReturns
 from silverfund.strategies import Strategy
-
-
-class ProfitAndLoss(pl.DataFrame):
-    def __init__(self, pnl: pl.DataFrame) -> None:
-        expected_order = ["date", "barrid", "weight", "fwd_ret"]
-
-        valid_schema = {
-            "date": pl.Date,
-            "barrid": pl.String,
-            "weight": pl.Float64,
-            "fwd_ret": pl.Float64,
-        }
-
-        # Check if all required columns exist
-        if set(expected_order) != set(pnl.columns):
-            missing = set(expected_order) - set(pnl.columns)
-            raise ValueError(f"Missing required columns: {missing}")
-
-        # Ensure correct column types
-        for col, dtype in valid_schema.items():
-            if pnl.schema[col] != dtype:
-                raise ValueError(
-                    f"Column {col} has incorrect type: {pnl.schema[col]}, expected: {dtype}"
-                )
-
-        # Reorder columns
-        pnl = pnl.select(expected_order)
-
-        # Initialize
-        super().__init__(pnl)
 
 
 class Backtester:
@@ -46,7 +16,7 @@ class Backtester:
         self._end_date = end_date
         self._data = data
 
-    def run_sequential(self, strategy: Strategy) -> ProfitAndLoss:
+    def run_sequential(self, strategy: Strategy) -> AssetReturns:
         # Universe, training_data, and testing_data will all be parameters in the future.
         universe = dal.load_universe(
             interval=self._interval, start_date=self._start_date, end_date=self._end_date
@@ -85,7 +55,7 @@ class Backtester:
         portfolios = pl.concat(portfolios)
 
         # Join forward returns on portfolios
-        pnl = portfolios.join(testing_data, on=["barrid", "date"], how="left")
-        pnl = pnl.sort(["barrid", "date"])
+        asset_returns = portfolios.join(testing_data, on=["barrid", "date"], how="left")
+        asset_returns = asset_returns.sort(["barrid", "date"])
 
-        return ProfitAndLoss(pnl)
+        return AssetReturns(asset_returns)
