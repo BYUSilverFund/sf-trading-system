@@ -6,7 +6,7 @@ from silverfund.enums import Compounding, Interval
 from silverfund.performance import Performance
 from silverfund.records import AssetReturns
 
-folder = "research/example/example_results/"
+folder = "research/example/results/"
 
 # Asset returns (result of backtester)
 data_file_path = folder + "backtest_example.parquet"
@@ -21,12 +21,7 @@ performance = Performance(
     annualize=True,
 )
 
-# Charts
-total_plot_file_path = folder + "backtest_example_total.png"
-performance.plot_returns(
-    compounding=Compounding.SUM, decompose=False, save_file_path=total_plot_file_path
-)
-
+# Chart
 decomposed_plot_file_path = folder + "backtest_example_decomposed.png"
 performance.plot_returns(
     compounding=Compounding.SUM, decompose=True, save_file_path=decomposed_plot_file_path
