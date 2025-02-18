@@ -42,8 +42,8 @@ if __name__ == "__main__":
     bt = Backtester(interval=interval, start_date=start_date, end_date=end_date, data=training_data)
 
     # Run sequentially
-    pnl = bt.run_sequential(strategy)
+    asset_returns = bt.run_sequential(strategy)
     print("-" * 20 + " Asset Returns " + "-" * 20)
-    print(pnl)
+    print(asset_returns)
 
-    pnl.write_parquet("research/backtest_example.parquet")
+    asset_returns.write_parquet("research/example/example_results/backtest_example.parquet")
