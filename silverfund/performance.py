@@ -21,6 +21,10 @@ class Performance:
         asset_returns: AssetReturns,
         annualize: bool = True,
     ) -> None:
+        self._start_date = start_date
+        self._end_date = end_date
+        self._interval = interval
+
         # Set annualizing variables
         annual_scales = {Interval.DAILY: 252, Interval.MONTHLY: 12}
 
@@ -47,6 +51,8 @@ class Performance:
             .agg(pl.col("total_ret").sum(), pl.col("bmk_ret").sum(), pl.col("active_ret").sum())
             .sort("date")
         )
+
+        self._periods = self._portfolio_returns["date"].unique().count()
 
     def plot_returns(
         self, compounding: Compounding, decompose: bool = False, save_file_path: str | None = None
@@ -219,7 +225,16 @@ class Performance:
         # Generate the table
         table = tabulate(data, headers=headers, tablefmt="rounded_grid")
         title = "-" * 20 + " Performance Summary " + "-" * 20
-        result = title + "\n\n" + table
+        description = "\n".join(
+            [
+                f"Start Date: {self._start_date}",
+                f"End Date: {self._end_date}",
+                f"Interval: {self._interval.value.title()}",
+                f"Periods: {self._periods}",
+            ]
+        )
+
+        result = "\n\n".join([title, description, table])
 
         if save_file_path == None:
             return result
