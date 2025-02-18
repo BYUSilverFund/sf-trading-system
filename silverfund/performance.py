@@ -207,7 +207,7 @@ class Performance:
         # Create data rows for the table
         data = [
             [
-                "Return",
+                "Return (Mean)",
                 f"{self.expected_return:.2%}",
                 f"{self.expected_benchmark_return:.2%}",
                 f"{self.expected_alpha:.2%}",
