@@ -34,3 +34,11 @@ def momentum(data: pl.DataFrame) -> Signal:
         .sort(["barrid", "date"])
     )
     return Signal(signals, "mom")
+
+def barraBAB(data: pl.DataFrame) -> Signal:
+    signals = (
+        data.with_columns(pl.col("predbeta") * -1)
+        .select(["date", "barrid", "predbeta"])
+        .sort(["barrid", "date"])
+    )
+    return Signal(signals, "predbeta")
