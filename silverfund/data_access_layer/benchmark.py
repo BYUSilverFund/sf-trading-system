@@ -29,8 +29,10 @@ def load_benchmark(
     # Create benchmark weights
     benchmark = (
         benchmark.join(total_market_cap, on="date", how="left")
-        .with_columns((pl.col("mktcap") / pl.col("total_mktcap")).alias("weight"))
-        .select(["date", "barrid", "weight", "ret"])
+        .with_columns(
+            (pl.col("mktcap") / pl.col("total_mktcap")).alias("weight"),
+        )
+        .select(["date", "barrid", "weight"])
     )
 
     return benchmark

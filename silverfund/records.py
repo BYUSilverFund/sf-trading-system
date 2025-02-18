@@ -1,5 +1,3 @@
-from datetime import date
-
 import polars as pl
 
 
@@ -39,6 +37,9 @@ class Signal(pl.DataFrame):
         # Reorder columns
         signals = signals.select(expected_order)
 
+        # Sort
+        signals = signals.sort(["barrid", "date"])
+
         # Initialize
         super().__init__(signals)
 
@@ -61,6 +62,9 @@ class Score(pl.DataFrame):
 
         # Reorder columns
         scores = scores.select(expected_order)
+
+        # Sort
+        scores = scores.sort(["barrid", "date"])
 
         # Initialize
         super().__init__(scores)
@@ -85,6 +89,9 @@ class Alpha(pl.DataFrame):
         # Reorder columns
         alphas = alphas.select(expected_order)
 
+        # Sort
+        alphas = alphas.sort(["barrid", "date"])
+
         # Initialize
         super().__init__(alphas)
 
@@ -106,6 +113,9 @@ class CovarianceMatrix(pl.DataFrame):
 
         # Reorder columns
         cov_mat = cov_mat.select(expected_order)
+
+        # Sort
+        cov_mat = cov_mat.sort("barrid")
 
         # Initialize
         super().__init__(cov_mat)
@@ -133,6 +143,9 @@ class Portfolio(pl.DataFrame):
         # Reorder columns
         portfolios = portfolios.select(expected_order)
 
+        # Sort
+        portfolios = portfolios.sort(["barrid", "date"])
+
         # Initialize
         super().__init__(portfolios)
 
@@ -156,6 +169,9 @@ class AssetReturns(pl.DataFrame):
 
         # Reorder columns
         returns = returns.select(expected_order)
+
+        # Sort
+        returns = returns.sort(["barrid", "date"])
 
         # Initialize
         super().__init__(returns)
