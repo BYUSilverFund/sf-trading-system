@@ -4,34 +4,7 @@ import numpy as np
 import polars as pl
 
 import silverfund.data_access_layer as dal
-
-
-class CovarianceMatrix(pl.DataFrame):
-    def __init__(self, cov_mat: pl.DataFrame, barrids: list[str], date_: date) -> None:
-        expected_order = ["barrid"] + sorted(barrids)
-
-        valid_schema = {barrid: pl.Float64 for barrid in barrids}
-
-        # Check if all required columns exist
-        if set(expected_order) != set(cov_mat.columns):
-            missing = set(expected_order) - set(cov_mat.columns)
-            raise ValueError(f"Missing required columns: {missing}")
-
-        # Ensure correct column types
-        for col, dtype in valid_schema.items():
-            if cov_mat.schema[col] != dtype:
-                raise ValueError(
-                    f"Column {col} has incorrect type: {cov_mat.schema[col]}, expected: {dtype}"
-                )
-
-        # Reorder columns
-        cov_mat = cov_mat.select(expected_order)
-
-        # Initialize
-        super().__init__(cov_mat)
-
-    def to_matrix(self):
-        return self.drop("barrid").to_numpy()
+from silverfund.records import CovarianceMatrix
 
 
 def covariance_matrix_constructor(date_: date, barrids: list[str]) -> CovarianceMatrix:
@@ -54,7 +27,7 @@ def covariance_matrix_constructor(date_: date, barrids: list[str]) -> Covariance
         }
     )
 
-    return CovarianceMatrix(covariance_matrix, barrids=barrids, date_=date_)
+    return CovarianceMatrix(covariance_matrix, barrids=barrids)
 
 
 def factor_exposure_matrix_constructor(date_: date, barrids: list[str]) -> pl.DataFrame:
