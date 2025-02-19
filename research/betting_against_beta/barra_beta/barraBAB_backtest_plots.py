@@ -15,7 +15,7 @@ portfolio_returns = (
         pl.col("barrid").count().alias("n_assets"),
     )
     .sort("date")
-    .with_columns((pl.col("portfolio_ret") / 100).log1p().cum_sum().alias("portfolio_cumret"))
+    .with_columns((pl.col("portfolio_ret") / 100).cum_sum().alias("portfolio_cumret"))
     .with_columns(pl.col("portfolio_cumret") * 100)  # put into percent space
 )
 
