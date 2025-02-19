@@ -6,25 +6,25 @@ from silverfund.backtester import Backtester
 from silverfund.constraints import *
 from silverfund.enums import Interval
 from silverfund.portfolios import mean_variance_efficient
-from silverfund.scores import z_score
-from silverfund.signals import barraBAB
+from silverfund.scores import uniform_score
+from silverfund.signals import lowBeta
 from silverfund.strategies import Strategy
 
 if __name__ == "__main__":
     # Date range
-    start_date = date(2014, 1, 1)
+    start_date = date(2018, 1, 1)
     end_date = date(2023, 12, 31)
     interval = Interval.MONTHLY
 
     # Define strategy
     strategy = Strategy(
-        signal_constructor=barraBAB,
-        score_constructor=partial(z_score, signal_col="predbeta"),
+        signal_constructor=lowBeta,
+        score_constructor=partial(uniform_score, signal_col="predbeta"),
         alpha_constructor=partial(grindold_kahn, interval=interval),
         portfolio_constructor=mean_variance_efficient,
         constraints=[
             long_only,
-            partial(zero_beta, interval=interval),
+            partial(unit_beta, interval=interval),
         ],
     )
 
@@ -54,4 +54,4 @@ if __name__ == "__main__":
     print("-" * 20 + " Asset Returns " + "-" * 20)
     print(pnl)
 
-    pnl.write_parquet("barraBAB_backtest.parquet")
+    pnl.write_parquet("lowBeta_backtest.parquet")
