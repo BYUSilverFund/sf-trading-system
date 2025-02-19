@@ -148,15 +148,20 @@ class Performance:
     def _ratio(self, col: str) -> float:
         return self._mean(col) / self._std(col)
 
-    def _beta(self, col: str) -> float:
+    def _coef(self, col: str) -> float:
         formula = f"{col} ~ bmk_ret"
         result = smf.ols(formula, self._portfolio_returns).fit()
         return result.params["bmk_ret"]
 
-    def _alpha(self, col: str) -> float:
+    def _intercept(self, col: str) -> float:
         formula = f"{col} ~ bmk_ret"
         result = smf.ols(formula, self._portfolio_returns).fit()
-        return result.params["Intercept"]
+        result = result.params["Intercept"]
+
+        if self._annualize:
+            result *= self._annual_scale
+
+        return result
 
     @property
     def portfolio_return(self) -> float:
@@ -196,27 +201,27 @@ class Performance:
 
     @property
     def portfolio_beta(self) -> float:
-        return self._beta("total_ret")
+        return self._coef("total_ret")
 
     @property
     def benchmark_beta(self) -> float:
-        return self._beta("bmk_ret")
+        return self._coef("bmk_ret")
 
     @property
     def active_beta(self) -> float:
-        return self._beta("active_ret")
+        return self._coef("active_ret")
 
     @property
     def portfolio_alpha(self) -> float:
-        return self._alpha("total_ret")
+        return self._intercept("total_ret")
 
     @property
     def benchmark_alpha(self) -> float:
-        return self._alpha("bmk_ret")
+        return self._intercept("bmk_ret")
 
     @property
     def active_alpha(self) -> float:
-        return self._alpha("active_ret")
+        return self._intercept("active_ret")
 
     def summary(self, save_file_path: str | None = None) -> str | None:
         # Create data rows for the table
@@ -266,6 +271,7 @@ class Performance:
                 f"End Date: {self._end_date}",
                 f"Interval: {self._interval.value.title()}",
                 f"Periods: {self._periods}",
+                f"Annualized: {self._annualize}",
             ]
         )
 
