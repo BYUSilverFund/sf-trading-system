@@ -129,99 +129,129 @@ class Performance:
         else:
             plt.savefig(save_file_path)
 
-    @property
-    def expected_return(self) -> float:
-        result = self._portfolio_returns["total_ret"].mean()
+    def _mean(self, col: str) -> float:
+        result = self._portfolio_returns[col].mean()
 
         if self._annualize:
             result *= self._annual_scale
 
         return result
 
-    @property
-    def expected_benchmark_return(self) -> float:
-        result = self._portfolio_returns["bmk_ret"].mean()
-
-        if self._annualize:
-            result *= self._annual_scale
-
-        return result
-
-    @property
-    def expected_alpha(self) -> float:
-        result = self._portfolio_returns["active_ret"].mean()
-
-        if self._annualize:
-            result *= self._annual_scale
-
-        return result
-
-    @property
-    def volatility(self) -> float:
-        result = self._portfolio_returns["total_ret"].std()
+    def _std(self, col: str) -> float:
+        result = self._portfolio_returns[col].std()
 
         if self._annualize:
             result *= np.sqrt(self._annual_scale)
 
         return result
 
-    @property
-    def benchmark_volatility(self) -> float:
-        result = self._portfolio_returns["bmk_ret"].std()
+    def _ratio(self, col: str) -> float:
+        return self._mean(col) / self._std(col)
 
-        if self._annualize:
-            result *= np.sqrt(self._annual_scale)
-
-        return result
-
-    @property
-    def active_risk(self) -> float:
-        result = self._portfolio_returns["active_ret"].std()
-
-        if self._annualize:
-            result *= np.sqrt(self._annual_scale)
-
-        return result
-
-    @property
-    def sharpe_ratio(self) -> float:
-        return self.expected_return / self.volatility
-
-    @property
-    def information_ratio(self) -> float:
-        return self.expected_alpha / self.active_risk
-
-    @property
-    def tota_beta(self) -> float:
-        formula = "total_ret ~ bmk_ret"
+    def _beta(self, col: str) -> float:
+        formula = f"{col} ~ bmk_ret"
         result = smf.ols(formula, self._portfolio_returns).fit()
         return result.params["bmk_ret"]
 
-    @property
-    def tota_alpha(self) -> float:
-        formula = "total_ret ~ bmk_ret"
+    def _alpha(self, col: str) -> float:
+        formula = f"{col} ~ bmk_ret"
         result = smf.ols(formula, self._portfolio_returns).fit()
         return result.params["Intercept"]
+
+    @property
+    def portfolio_return(self) -> float:
+        return self._mean("total_ret")
+
+    @property
+    def benchmark_return(self) -> float:
+        return self._mean("bmk_ret")
+
+    @property
+    def active_return(self) -> float:
+        return self._mean("active_ret")
+
+    @property
+    def portfolio_risk(self) -> float:
+        return self._std("total_ret")
+
+    @property
+    def benchmark_risk(self) -> float:
+        return self._std("bmk_ret")
+
+    @property
+    def active_risk(self) -> float:
+        return self._std("active_ret")
+
+    @property
+    def portfolio_sharpe(self) -> float:
+        return self._ratio("total_ret")
+
+    @property
+    def benchmark_sharpe(self) -> float:
+        return self._ratio("bmk_ret")
+
+    @property
+    def information_ratio(self) -> float:
+        return self._ratio("active_ret")
+
+    @property
+    def portfolio_beta(self) -> float:
+        return self._beta("total_ret")
+
+    @property
+    def benchmark_beta(self) -> float:
+        return self._beta("bmk_ret")
+
+    @property
+    def active_beta(self) -> float:
+        return self._beta("active_ret")
+
+    @property
+    def portfolio_alpha(self) -> float:
+        return self._alpha("total_ret")
+
+    @property
+    def benchmark_alpha(self) -> float:
+        return self._alpha("bmk_ret")
+
+    @property
+    def active_alpha(self) -> float:
+        return self._alpha("active_ret")
 
     def summary(self, save_file_path: str | None = None) -> str | None:
         # Create data rows for the table
         data = [
             [
                 "Return (Mean)",
-                f"{self.expected_return:.2%}",
-                f"{self.expected_benchmark_return:.2%}",
-                f"{self.expected_alpha:.2%}",
+                f"{self.portfolio_return:.2%}",
+                f"{self.benchmark_return:.2%}",
+                f"{self.active_return:.2%}",
             ],
             [
-                "Volatility",
-                f"{self.volatility:.2%}",
-                f"{self.benchmark_volatility:.2%}",
+                "Risk",
+                f"{self.portfolio_risk:.2%}",
+                f"{self.benchmark_risk:.2%}",
                 f"{self.active_risk:.2%}",
             ],
-            ["Sharpe Ratio", f"{self.sharpe_ratio:.2f}", "", ""],
+            [
+                "Sharpe Ratio",
+                f"{self.portfolio_sharpe:.2f}",
+                f"{self.benchmark_sharpe:.2f}",
+                "",
+            ],
             ["Information Ratio", f"{self.information_ratio:.2f}", "", ""],
-            ["Beta", f"{self.tota_beta:.2f}", "", ""],
-            ["Alpha", f"{self.tota_alpha:.2%}", "", ""],
+            [
+                "Beta",
+                f"{self.portfolio_beta:.2f}",
+                f"{self.benchmark_beta:.2f}",
+                f"{self.active_beta:.2f}",
+            ],
+            [
+                "Alpha",
+                f"{self.portfolio_alpha:.2%}",
+                f"{self.benchmark_alpha:.2%}",
+                f"{self.active_alpha:.2%}",
+            ],
         ]
 
         # Define headers
