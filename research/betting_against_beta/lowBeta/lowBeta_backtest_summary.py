@@ -13,7 +13,7 @@ asset_returns = AssetReturns(returns=pl.read_parquet(data_file_path))
 
 # Performance instance
 performance = Performance(
-    start_date=date(2018, 1, 1),
+    start_date=date(2014, 1, 1),
     end_date=date(2023, 12, 31),
     interval=Interval.MONTHLY,
     asset_returns=asset_returns,

@@ -23,7 +23,6 @@ if __name__ == "__main__":
         alpha_constructor=partial(grindold_kahn, interval=interval),
         portfolio_constructor=mean_variance_efficient,
         constraints=[
-            long_only,
             partial(zero_beta, interval=interval),
         ],
     )
