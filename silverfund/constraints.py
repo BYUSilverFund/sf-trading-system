@@ -43,3 +43,24 @@ def unit_beta(
     )
 
     return cp.sum(cp.multiply(weights, betas)) == 1
+
+def zero_beta(
+    weights: cp.Variable, date_: date, barrids: list[str], interval: Interval
+) -> cp.Constraint:
+    # Cast to polars dataframe
+    barrids_df = pl.DataFrame({"barrid": barrids})
+
+    # Create betas dataframe
+    betas_df = dal.load_total_risk(interval=interval, start_date=date_, end_date=date_).select(
+        ["barrid", "predbeta"]
+    )
+
+    # Filter on universe, fill null with mean, and cast to np vector
+    betas = (
+        barrids_df.join(betas_df, how="left", on="barrid")
+        .fill_null(strategy="mean")["predbeta"]
+        .to_list()
+    )
+
+    return cp.sum(cp.multiply(weights, betas)) == 0
+
