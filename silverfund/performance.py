@@ -55,7 +55,11 @@ class Performance:
         self._periods = self._portfolio_returns["date"].unique().count()
 
     def plot_returns(
-        self, compounding: Compounding, decompose: bool = False, save_file_path: str | None = None
+        self,
+        compounding: Compounding,
+        title: str,
+        decompose: bool = False,
+        save_file_path: str | None = None,
     ) -> None:
         df = self._portfolio_returns
 
@@ -114,6 +118,7 @@ class Performance:
             sns.lineplot(df, x="date", y="active_ret", label="Active")
             plt.legend()
 
+        plt.title(title)
         plt.xlabel(None)
         plt.ylabel(f"Cummulative {compounding.value.title()} Returns (%)")
         plt.grid()
@@ -202,7 +207,7 @@ class Performance:
         # Create data rows for the table
         data = [
             [
-                "Return",
+                "Return (Mean)",
                 f"{self.expected_return:.2%}",
                 f"{self.expected_benchmark_return:.2%}",
                 f"{self.expected_alpha:.2%}",
