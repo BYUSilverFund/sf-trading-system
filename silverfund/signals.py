@@ -19,6 +19,7 @@ def momentum(data: pl.DataFrame) -> Signal:
     )
     return Signal(signals, "mom")
 
+
 def barraBAB(data: pl.DataFrame) -> Signal:
     signals = (
         data.with_columns(pl.col("predbeta") * -1)
@@ -26,6 +27,7 @@ def barraBAB(data: pl.DataFrame) -> Signal:
         .sort(["barrid", "date"])
     )
     return Signal(signals, "predbeta")
+
 
 def lowBeta(data: pl.DataFrame) -> Signal:
     signals = (
@@ -37,7 +39,7 @@ def lowBeta(data: pl.DataFrame) -> Signal:
         )
         .with_columns(
             pl.when(pl.col("bin") == "0") 
-            .then(pl.col("predbeta") * -1) 
+            .then(pl.col("predbeta") * 1) 
             .otherwise(pl.lit(None))
             .alias("predbeta")
         )
