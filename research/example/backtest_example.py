@@ -1,9 +1,10 @@
 from datetime import date
 from functools import partial
 
+import silverfund.data_access_layer as dal
 from silverfund.alphas import grindold_kahn
 from silverfund.backtester import Backtester
-from silverfund.constraints import *
+from silverfund.constraints import full_investment, long_only, no_buying_on_margin, unit_beta
 from silverfund.enums import Interval
 from silverfund.portfolios import mean_variance_efficient
 from silverfund.scores import z_score

@@ -124,7 +124,7 @@ class Performance:
         plt.grid()
 
         # Save/show
-        if save_file_path == None:
+        if save_file_path is None:
             plt.show()
         else:
             plt.savefig(save_file_path)
@@ -277,7 +277,7 @@ class Performance:
 
         result = "\n\n".join([title, description, table])
 
-        if save_file_path == None:
+        if save_file_path is None:
             return result
         else:
             with open(save_file_path, "w") as file:
