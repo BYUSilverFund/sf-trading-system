@@ -1,9 +1,12 @@
+import os
 from datetime import date
 from functools import partial
+from pathlib import Path
 
+import silverfund.data_access_layer as dal
 from silverfund.alphas import grindold_kahn
 from silverfund.backtester import Backtester
-from silverfund.constraints import *
+from silverfund.constraints import full_investment, long_only, no_buying_on_margin, unit_beta
 from silverfund.enums import Interval
 from silverfund.portfolios import mean_variance_efficient
 from silverfund.scores import z_score
@@ -12,8 +15,8 @@ from silverfund.strategies import Strategy
 
 if __name__ == "__main__":
     # Date range
-    start_date = date(2001, 1, 1)
-    end_date = date(2020, 12, 31)
+    start_date = date(1995, 7, 31)
+    end_date = date(2024, 12, 31)
     interval = Interval.MONTHLY
 
     # Define strategy
@@ -30,8 +33,8 @@ if __name__ == "__main__":
         ],
     )
 
+    # Create training data
     universe = dal.load_universe(interval=interval, start_date=start_date, end_date=end_date)
-
     training_data = universe.join(
         dal.load_barra_returns(interval=interval, start_date=start_date, end_date=end_date),
         on=["date", "barrid"],
@@ -41,9 +44,12 @@ if __name__ == "__main__":
     # Instantiate backtester
     bt = Backtester(interval=interval, start_date=start_date, end_date=end_date, data=training_data)
 
-    # Run sequentially
-    asset_returns = bt.run_sequential(strategy)
+    # Run in parallel
+    asset_returns = bt.run_parallel(strategy)
     print("-" * 20 + " Asset Returns " + "-" * 20)
     print(asset_returns)
 
-    asset_returns.write_parquet("research/classic_momentum/results/monthly_momentum_bt.parquet")
+    # Save results
+    folder = Path("research/classic_momentum/results")
+    os.makedirs(folder, exist_ok=True)
+    asset_returns.write_parquet(folder / "monthly_momentum_bt.parquet")
