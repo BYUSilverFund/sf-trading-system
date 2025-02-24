@@ -42,16 +42,12 @@ if __name__ == "__main__":
         how="left",
     ).sort(["barrid", "date"])
 
-    # Create slack log config
-    slack_log_config = SlackLogConfig(slack_member_id="U05NMGKA52Q", job_name="Backtest Example")
-
     # Instantiate backtester
     bt = Backtester(
         interval=interval,
         start_date=start_date,
         end_date=end_date,
         data=training_data,
-        slack_log_config=slack_log_config,
     )
 
     # Run in parallel
