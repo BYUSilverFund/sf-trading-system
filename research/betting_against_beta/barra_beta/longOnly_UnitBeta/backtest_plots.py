@@ -4,7 +4,7 @@ import polars as pl
 import seaborn as sns
 
 # Load data
-pnl = pl.read_parquet("lowBeta_backtest.parquet")
+pnl = pl.read_parquet("barraBAB_backtest.parquet")
 
 # Aggregate to portfolio level
 portfolio_returns = (

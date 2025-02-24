@@ -21,3 +21,6 @@ wheels/
 
 # Archive
 .archive
+
+# Slurm outputs
+*.out

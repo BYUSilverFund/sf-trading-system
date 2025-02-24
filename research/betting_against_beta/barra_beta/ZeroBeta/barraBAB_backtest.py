@@ -12,9 +12,9 @@ from silverfund.strategies import Strategy
 
 if __name__ == "__main__":
     # Date range
-    start_date = date(2014, 1, 1)
+    start_date = date(1996, 1, 1)
     end_date = date(2023, 12, 31)
-    interval = Interval.MONTHLY
+    interval = Interval.DAILY
 
     # Define strategy
     strategy = Strategy(
@@ -48,8 +48,8 @@ if __name__ == "__main__":
     # Instantiate backtester
     bt = Backtester(interval=interval, start_date=start_date, end_date=end_date, data=training_data)
 
-    # Run sequentially
-    pnl = bt.run_sequential(strategy)
+    # Run backtest
+    pnl = bt.run_parallel(strategy)
     print("-" * 20 + " Asset Returns " + "-" * 20)
     print(pnl)
 
