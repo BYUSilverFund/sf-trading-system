@@ -31,7 +31,7 @@ class Backtester:
         start_date: date,
         end_date: date,
         data: pl.DataFrame,
-        slack_log_config: SlackLogConfig,
+        slack_log_config: SlackLogConfig | None = None,
     ):
         """
         Initializes a Backtester instance.
