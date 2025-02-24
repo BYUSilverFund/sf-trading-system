@@ -8,6 +8,7 @@ from tqdm import tqdm
 
 import silverfund.data_access_layer as dal
 from silverfund.enums import Interval
+from silverfund.logging.slack import SlackLogConfig, send_message_to_slack
 from silverfund.records import Alpha, AssetReturns, Portfolio
 from silverfund.strategies import Strategy
 
@@ -24,7 +25,14 @@ class Backtester:
         _data (pl.DataFrame): The data to be used for the backtest, in the form of a Polars DataFrame.
     """
 
-    def __init__(self, interval: Interval, start_date: date, end_date: date, data: pl.DataFrame):
+    def __init__(
+        self,
+        interval: Interval,
+        start_date: date,
+        end_date: date,
+        data: pl.DataFrame,
+        slack_log_config: SlackLogConfig,
+    ):
         """
         Initializes a Backtester instance.
 
@@ -38,6 +46,7 @@ class Backtester:
         self._start_date = start_date
         self._end_date = end_date
         self._data = data
+        self._slack_log_config = slack_log_config
 
     def _compute_alphas(self, strategy: Strategy) -> Alpha:
         """
@@ -178,7 +187,12 @@ class Backtester:
         # Set up ray
         n_cpus = n_cpus or os.cpu_count()
         n_cpus = min(len(periods), n_cpus)
-        ray.init(ignore_reinit_error=True, num_cpus=n_cpus)
+        context = ray.init(ignore_reinit_error=True, num_cpus=n_cpus)
+
+        # Send initial slack message
+        if self._slack_log_config is not None:
+            self._slack_log_config.ray_url = context.dashboard_url
+            send_message_to_slack(self._slack_log_config.to_initial_message())
 
         # Set up ray progress bar
         remote_tqdm = ray.remote(tqdm_ray.tqdm)
@@ -198,5 +212,9 @@ class Backtester:
         # Shutdown ray and progress bar
         progress_bar.close.remote()
         ray.shutdown()
+
+        # Send terminal slack message
+        if self._slack_log_config is not None:
+            send_message_to_slack(self._slack_log_config.to_terminal_message())
 
         return self._compute_forward_returns(portfolios)
