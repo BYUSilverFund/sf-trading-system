@@ -1,5 +1,7 @@
+import os
 from datetime import date
 from functools import partial
+from pathlib import Path
 
 import silverfund.data_access_layer as dal
 from silverfund.alphas import grindold_kahn
@@ -31,8 +33,8 @@ if __name__ == "__main__":
         ],
     )
 
+    # Create training data
     universe = dal.load_universe(interval=interval, start_date=start_date, end_date=end_date)
-
     training_data = universe.join(
         dal.load_barra_returns(interval=interval, start_date=start_date, end_date=end_date),
         on=["date", "barrid"],
@@ -42,9 +44,11 @@ if __name__ == "__main__":
     # Instantiate backtester
     bt = Backtester(interval=interval, start_date=start_date, end_date=end_date, data=training_data)
 
-    # Run sequentially
-    asset_returns = bt.run_sequential(strategy)
+    # Run in parallel
+    asset_returns = bt.run_parallel(strategy)
     print("-" * 20 + " Asset Returns " + "-" * 20)
-    print(asset_returns)
 
-    asset_returns.write_parquet("research/example/results/backtest_example.parquet")
+    # Save results
+    folder = Path("research/example/results")
+    os.makedirs(folder)
+    asset_returns.write_parquet(folder / "backtest_example.parquet")
