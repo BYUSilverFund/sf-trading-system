@@ -31,11 +31,11 @@ def grindold_kahn(scores: Score, interval: Interval, ic: float = 0.05) -> Alpha:
     start_date = scores["date"].min()
     end_date = scores["date"].max()
 
-    vols = dal.load_total_risk(interval, start_date, end_date).with_columns(pl.col("spec_risk"))
+    vols = dal.load_total_risk(interval, start_date, end_date)
 
     return Alpha(
         scores.join(other=vols, on=["date", "barrid"], how="left")
-        .with_columns(((ic * pl.col("total_risk") * pl.col("score")).alias("alpha")))
+        .with_columns(((ic * pl.col("spec_risk") * pl.col("score")).alias("alpha")))
         .fill_null(0)
         .select(["date", "barrid", "alpha"])
         .sort(["barrid", "date"])
