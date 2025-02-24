@@ -80,28 +80,20 @@ class Performance:
         # Create portfolio returns dataframe
         self._portfolio_returns = (
             self._asset_returns.group_by("date")
-            .agg(pl.col("total_ret").sum(), pl.col("bmk_ret").sum(), pl.col("active_ret").sum())
+            .agg(
+                pl.col("total_ret").sum(),
+                pl.col("bmk_ret").sum(),
+                pl.col("active_ret").sum(),
+            )
             .sort("date")
         )
 
         self._periods = self._portfolio_returns["date"].unique().count()
 
-    def plot_returns(
+    def get_returns(
         self,
         compounding: Compounding,
-        title: str,
-        decompose: bool = False,
-        save_file_path: str | None = None,
-    ) -> None:
-        """
-        Plots the cumulative returns for portfolio, benchmark, and active returns.
-
-        Args:
-            compounding (Compounding): The compounding method (sum or product).
-            title (str): The title of the plot.
-            decompose (bool, optional): Whether to decompose the total return into benchmark and active returns.
-            save_file_path (str | None, optional): If provided, saves the plot to the given path.
-        """
+    ) -> pl.DataFrame:
         df = self._portfolio_returns
 
         # Create cummulative returns dataframe
@@ -148,6 +140,26 @@ class Performance:
             pl.col("bmk_ret") * 100,
             pl.col("active_ret") * 100,
         )
+
+        return df
+
+    def plot_returns(
+        self,
+        compounding: Compounding,
+        title: str,
+        decompose: bool = False,
+        save_file_path: str | None = None,
+    ) -> None:
+        """
+        Plots the cumulative returns for portfolio, benchmark, and active returns.
+
+        Args:
+            compounding (Compounding): The compounding method (sum or product).
+            title (str): The title of the plot.
+            decompose (bool, optional): Whether to decompose the total return into benchmark and active returns.
+            save_file_path (str | None, optional): If provided, saves the plot to the given path.
+        """
+        df = self.get_returns(compounding=compounding)
 
         # Plot
         plt.figure(figsize=(10, 6))

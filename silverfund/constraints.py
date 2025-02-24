@@ -52,6 +52,21 @@ def no_buying_on_margin(weights: cp.Variable, date_: date, barrids: list[str]) -
     return weights <= 1
 
 
+def shorting_limit(weights: cp.Variable, date_: date, barrids: list[str]) -> cp.Constraint:
+    """
+    Enforces the constraint that no asset can be shorted beyond 100%, i.e., portfolio weights must be greater than or equal to 1.
+
+    Args:
+        weights (cp.Variable): The decision variable representing portfolio weights.
+        date_ (date): The date for which the constraint is applied.
+        barrids (list[str]): A list of asset identifiers (barrids) in the portfolio.
+
+    Returns:
+        cp.Constraint: The no-buying-on-margin constraint that ensures weights are greater than or equal to 1.
+    """
+    return weights >= -1
+
+
 def long_only(weights: cp.Variable, date_: date, barrids: list[str]) -> cp.Constraint:
     """
     Enforces the long-only constraint, where portfolio weights must be non-negative.

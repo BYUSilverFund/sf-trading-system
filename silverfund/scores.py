@@ -36,3 +36,7 @@ def z_score(signals: Signal, signal_col: str) -> Score:
         .select(["date", "barrid", "score"])
         .sort(["barrid", "date"])
     )
+
+
+def no_score(signals: Signal) -> Score:
+    return Score(signals.rename({"signal": "score"}))
