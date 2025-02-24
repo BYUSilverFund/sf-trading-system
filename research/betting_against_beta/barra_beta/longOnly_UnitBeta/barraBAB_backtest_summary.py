@@ -9,7 +9,7 @@ from silverfund.records import AssetReturns
 # Asset returns (result of backtester)
 data_file_path = "barraBAB_backtest.parquet"
 asset_returns = AssetReturns(returns=pl.read_parquet(data_file_path))
-
+    
 # Performance instance
 performance = Performance(
     start_date=date(1996, 1, 1),
