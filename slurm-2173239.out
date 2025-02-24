@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "/home/bwaits/Research/sf-trading-system/reversal_research/reversal_backtest.py", line 4, in <module>
+    from silverfund.alphas import grindold_kahn
+ModuleNotFoundError: No module named 'silverfund.alphas'

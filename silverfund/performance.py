@@ -13,6 +13,28 @@ from silverfund.records import AssetReturns
 
 
 class Performance:
+    """
+    A class to evaluate and visualize portfolio performance.
+
+    This class provides methods to calculate and summarize key performance metrics,
+    including return, risk (standard deviation), Sharpe ratio, information ratio,
+    beta, and alpha for a portfolio, benchmark, and active returns.
+
+    Attributes:
+        interval (Interval): The frequency of data (e.g., daily, monthly).
+        start_date (date): The start date of the performance evaluation period.
+        end_date (date): The end date of the performance evaluation period.
+        asset_returns (AssetReturns): Asset returns data for the evaluation period.
+        annualize (bool): Whether to annualize the results (default is True).
+
+    Methods:
+        plot_returns(compounding: Compounding, title: str, decompose: bool = False,
+                      save_file_path: str | None = None):
+            Plots the cumulative returns of the portfolio, benchmark, and active returns.
+        summary(save_file_path: str | None = None):
+            Generates a summary table with performance metrics and returns it or saves to a file.
+    """
+
     def __init__(
         self,
         interval: Interval,
@@ -21,6 +43,16 @@ class Performance:
         asset_returns: AssetReturns,
         annualize: bool = True,
     ) -> None:
+        """
+        Initializes the Performance object.
+
+        Args:
+            interval (Interval): The data frequency (e.g., daily, monthly).
+            start_date (date): The start date for the performance evaluation period.
+            end_date (date): The end date for the performance evaluation period.
+            asset_returns (AssetReturns): Asset returns data.
+            annualize (bool, optional): Whether to annualize the performance metrics. Defaults to True.
+        """
         self._start_date = start_date
         self._end_date = end_date
         self._interval = interval
@@ -61,6 +93,15 @@ class Performance:
         decompose: bool = False,
         save_file_path: str | None = None,
     ) -> None:
+        """
+        Plots the cumulative returns for portfolio, benchmark, and active returns.
+
+        Args:
+            compounding (Compounding): The compounding method (sum or product).
+            title (str): The title of the plot.
+            decompose (bool, optional): Whether to decompose the total return into benchmark and active returns.
+            save_file_path (str | None, optional): If provided, saves the plot to the given path.
+        """
         df = self._portfolio_returns
 
         # Create cummulative returns dataframe
@@ -124,104 +165,148 @@ class Performance:
         plt.grid()
 
         # Save/show
-        if save_file_path == None:
+        if save_file_path is None:
             plt.show()
         else:
             plt.savefig(save_file_path)
 
-    @property
-    def expected_return(self) -> float:
-        result = self._portfolio_returns["total_ret"].mean()
+    def _mean(self, col: str) -> float:
+        result = self._portfolio_returns[col].mean()
 
         if self._annualize:
             result *= self._annual_scale
 
         return result
 
-    @property
-    def expected_benchmark_return(self) -> float:
-        result = self._portfolio_returns["bmk_ret"].mean()
-
-        if self._annualize:
-            result *= self._annual_scale
-
-        return result
-
-    @property
-    def expected_alpha(self) -> float:
-        result = self._portfolio_returns["active_ret"].mean()
-
-        if self._annualize:
-            result *= self._annual_scale
-
-        return result
-
-    @property
-    def volatility(self) -> float:
-        result = self._portfolio_returns["total_ret"].std()
+    def _std(self, col: str) -> float:
+        result = self._portfolio_returns[col].std()
 
         if self._annualize:
             result *= np.sqrt(self._annual_scale)
 
         return result
 
-    @property
-    def benchmark_volatility(self) -> float:
-        result = self._portfolio_returns["bmk_ret"].std()
+    def _ratio(self, col: str) -> float:
+        return self._mean(col) / self._std(col)
 
-        if self._annualize:
-            result *= np.sqrt(self._annual_scale)
-
-        return result
-
-    @property
-    def active_risk(self) -> float:
-        result = self._portfolio_returns["active_ret"].std()
-
-        if self._annualize:
-            result *= np.sqrt(self._annual_scale)
-
-        return result
-
-    @property
-    def sharpe_ratio(self) -> float:
-        return self.expected_return / self.volatility
-
-    @property
-    def information_ratio(self) -> float:
-        return self.expected_alpha / self.active_risk
-
-    @property
-    def tota_beta(self) -> float:
-        formula = "total_ret ~ bmk_ret"
+    def _coef(self, col: str) -> float:
+        formula = f"{col} ~ bmk_ret"
         result = smf.ols(formula, self._portfolio_returns).fit()
         return result.params["bmk_ret"]
 
-    @property
-    def tota_alpha(self) -> float:
-        formula = "total_ret ~ bmk_ret"
+    def _intercept(self, col: str) -> float:
+        formula = f"{col} ~ bmk_ret"
         result = smf.ols(formula, self._portfolio_returns).fit()
-        return result.params["Intercept"]
+        result = result.params["Intercept"]
+
+        if self._annualize:
+            result *= self._annual_scale
+
+        return result
+
+    @property
+    def portfolio_return(self) -> float:
+        return self._mean("total_ret")
+
+    @property
+    def benchmark_return(self) -> float:
+        return self._mean("bmk_ret")
+
+    @property
+    def active_return(self) -> float:
+        return self._mean("active_ret")
+
+    @property
+    def portfolio_risk(self) -> float:
+        return self._std("total_ret")
+
+    @property
+    def benchmark_risk(self) -> float:
+        return self._std("bmk_ret")
+
+    @property
+    def active_risk(self) -> float:
+        return self._std("active_ret")
+
+    @property
+    def portfolio_sharpe(self) -> float:
+        return self._ratio("total_ret")
+
+    @property
+    def benchmark_sharpe(self) -> float:
+        return self._ratio("bmk_ret")
+
+    @property
+    def information_ratio(self) -> float:
+        return self._ratio("active_ret")
+
+    @property
+    def portfolio_beta(self) -> float:
+        return self._coef("total_ret")
+
+    @property
+    def benchmark_beta(self) -> float:
+        return self._coef("bmk_ret")
+
+    @property
+    def active_beta(self) -> float:
+        return self._coef("active_ret")
+
+    @property
+    def portfolio_alpha(self) -> float:
+        return self._intercept("total_ret")
+
+    @property
+    def benchmark_alpha(self) -> float:
+        return self._intercept("bmk_ret")
+
+    @property
+    def active_alpha(self) -> float:
+        return self._intercept("active_ret")
 
     def summary(self, save_file_path: str | None = None) -> str | None:
+        """
+        Generates a summary of performance metrics as a table.
+
+        Args:
+            save_file_path (str | None, optional): If provided, saves the summary to the file path.
+
+        Returns:
+            str | None: The summary as a string, or None if saved to a file.
+        """
         # Create data rows for the table
         data = [
             [
                 "Return (Mean)",
-                f"{self.expected_return:.2%}",
-                f"{self.expected_benchmark_return:.2%}",
-                f"{self.expected_alpha:.2%}",
+                f"{self.portfolio_return:.2%}",
+                f"{self.benchmark_return:.2%}",
+                f"{self.active_return:.2%}",
             ],
             [
-                "Volatility",
-                f"{self.volatility:.2%}",
-                f"{self.benchmark_volatility:.2%}",
+                "Risk",
+                f"{self.portfolio_risk:.2%}",
+                f"{self.benchmark_risk:.2%}",
                 f"{self.active_risk:.2%}",
             ],
-            ["Sharpe Ratio", f"{self.sharpe_ratio:.2f}", "", ""],
+            [
+                "Sharpe Ratio",
+                f"{self.portfolio_sharpe:.2f}",
+                f"{self.benchmark_sharpe:.2f}",
+                "",
+            ],
             ["Information Ratio", f"{self.information_ratio:.2f}", "", ""],
-            ["Beta", f"{self.tota_beta:.2f}", "", ""],
-            ["Alpha", f"{self.tota_alpha:.2%}", "", ""],
+            [
+                "Beta",
+                f"{self.portfolio_beta:.2f}",
+                f"{self.benchmark_beta:.2f}",
+                f"{self.active_beta:.2f}",
+            ],
+            [
+                "Alpha",
+                f"{self.portfolio_alpha:.2%}",
+                f"{self.benchmark_alpha:.2%}",
+                f"{self.active_alpha:.2%}",
+            ],
         ]
 
         # Define headers
@@ -236,12 +321,13 @@ class Performance:
                 f"End Date: {self._end_date}",
                 f"Interval: {self._interval.value.title()}",
                 f"Periods: {self._periods}",
+                f"Annualized: {self._annualize}",
             ]
         )
 
         result = "\n\n".join([title, description, table])
 
-        if save_file_path == None:
+        if save_file_path is None:
             return result
         else:
             with open(save_file_path, "w") as file:
