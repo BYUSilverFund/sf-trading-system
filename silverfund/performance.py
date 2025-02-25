@@ -1,5 +1,3 @@
-from datetime import date
-
 import matplotlib.pyplot as plt
 import numpy as np
 import polars as pl
