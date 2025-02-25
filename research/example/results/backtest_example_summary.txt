@@ -1,7 +1,7 @@
 -------------------- Performance Summary --------------------
 
-Start Date: 2023-01-01
-End Date: 2023-12-31
+Start Date: 2023-01-31
+End Date: 2023-12-29
 Interval: Monthly
 Periods: 12
 Annualized: True

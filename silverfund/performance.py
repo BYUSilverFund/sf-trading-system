@@ -38,8 +38,6 @@ class Performance:
     def __init__(
         self,
         interval: Interval,
-        start_date: date,
-        end_date: date,
         asset_returns: AssetReturns,
         annualize: bool = True,
     ) -> None:
@@ -53,8 +51,8 @@ class Performance:
             asset_returns (AssetReturns): Asset returns data.
             annualize (bool, optional): Whether to annualize the performance metrics. Defaults to True.
         """
-        self._start_date = start_date
-        self._end_date = end_date
+        self._start_date = asset_returns["date"].min()
+        self._end_date = asset_returns["date"].max()
         self._interval = interval
 
         # Set annualizing variables
@@ -64,7 +62,9 @@ class Performance:
         self._annualize = annualize
 
         # Load benchmark
-        bmk = dal.load_benchmark(interval=interval, start_date=start_date, end_date=end_date)
+        bmk = dal.load_benchmark(
+            interval=interval, start_date=self._start_date, end_date=self._end_date
+        )
 
         # Create total_ret, bmk_ret, and active_ret columns.
         self._asset_returns = (
