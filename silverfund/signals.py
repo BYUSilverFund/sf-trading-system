@@ -34,3 +34,10 @@ def momentum(data: pl.DataFrame) -> Signal:
         .sort(["barrid", "date"])
     )
     return Signal(signals, "mom")
+
+
+def no_signal(data: pl.DataFrame) -> Signal:
+    return Signal(
+        data.select("date", "barrid", pl.lit(None).cast(pl.Float64).alias("signal")),
+        signal_name="signal",
+    )
