@@ -2,11 +2,10 @@ from enum import Enum
 
 
 class Interval(Enum):
-    DAILY = "DAILY"
-    WEEKLY = "WEEKLY"
-    MONTHLY = "MONTHLY"
+    DAILY = "daily"
+    MONTHLY = "monthly"
 
 
-class Weighting(Enum):
-    EQUAL = "EQUAL"
-    MARKET_CAP = "MARKET_CAP"
+class Compounding(Enum):
+    SUM = "sum"
+    PRODUCT = "product"
