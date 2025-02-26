@@ -290,25 +290,35 @@ class Performance:
         )
 
     @property
-    def abs_two_sided_turnover(self) -> float:
-        return (
+    def two_sided_turnover(self) -> float:
+        turnover = (
             self._asset_weights.with_columns(
                 pl.col("total_weight").shift(1).over("barrid").alias("total_weight_lag")
             )
             .with_columns(
-                (pl.col("total_weight") - pl.col("total_weight_lag"))
-                .abs()
-                .mul(self._annual_scale)
-                .alias("turnover")
+                (pl.col("total_weight") - pl.col("total_weight_lag")).abs().alias("turnover")
             )
             .group_by("date")
             .agg(pl.col("turnover").sum())["turnover"]
             .mean()
         )
 
+        if self._annualize:
+            turnover *= self._annual_scale
+
+        return turnover
+
     @property
     def holding_period(self) -> float:
-        return (2 / self.abs_two_sided_turnover) * 252
+        period = 2 / self.two_sided_turnover
+
+        if self._annualize:
+            period *= 365
+
+        elif self._interval == Interval.MONTHLY:
+            period *= 22
+
+        return period
 
     def summary(self, save_file_path: str | None = None) -> str | None:
         """
@@ -355,13 +365,13 @@ class Performance:
             ],
             [
                 "Leverage (Mean)",
-                f"{self.leverage:.2f}",
+                f"{self.leverage:.2f}X",
                 "",
                 "",
             ],
             [
                 "Two Sided Turnover (Mean)",
-                f"{self.abs_two_sided_turnover:.2f}",
+                f"{self.two_sided_turnover:.2f}X",
                 "",
                 "",
             ],
@@ -419,7 +429,7 @@ class Performance:
 
         plt.title(title)
         plt.xlabel(None)
-        plt.ylabel("Leverage")
+        plt.ylabel("Leverage (X)")
         plt.grid()
 
         if save_file_path is None:
@@ -436,10 +446,7 @@ class Performance:
                 pl.col("total_weight").shift(1).over("barrid").alias("total_weight_lag")
             )
             .with_columns(
-                (pl.col("total_weight") - pl.col("total_weight_lag"))
-                .abs()
-                .mul(self._annual_scale)
-                .alias(turnover_col)
+                (pl.col("total_weight") - pl.col("total_weight_lag")).abs().alias(turnover_col)
             )
             .group_by("date")
             .agg(pl.col(turnover_col).sum())
@@ -452,7 +459,7 @@ class Performance:
 
         plt.title(title)
         plt.xlabel(None)
-        plt.ylabel(f"{turnover.value.title()} Turnover")
+        plt.ylabel(f"{turnover.value.title()} Two Sided Turnover (X)")
         plt.grid()
 
         if save_file_path is None:
