@@ -4,14 +4,13 @@ from functools import partial
 from pathlib import Path
 
 import silverfund.data_access_layer as dal
-from silverfund.alphas import grindold_kahn
+from silverfund.alphas import static_alpha
 from silverfund.backtester import Backtester
 from silverfund.constraints import full_investment, long_only, no_buying_on_margin, unit_beta
 from silverfund.enums import Interval
-from silverfund.logging.slack import SlackLogConfig
 from silverfund.portfolios import mean_variance_efficient
-from silverfund.scores import z_score
-from silverfund.signals import momentum
+from silverfund.scores import no_score
+from silverfund.signals import no_signal
 from silverfund.strategies import Strategy
 
 if __name__ == "__main__":
@@ -22,9 +21,9 @@ if __name__ == "__main__":
 
     # Define strategy
     strategy = Strategy(
-        signal_constructor=momentum,
-        score_constructor=partial(z_score, signal_col="mom"),
-        alpha_constructor=partial(grindold_kahn, interval=interval),
+        signal_constructor=no_signal,
+        score_constructor=no_score,
+        alpha_constructor=partial(static_alpha, value=0),
         portfolio_constructor=mean_variance_efficient,
         constraints=[
             full_investment,

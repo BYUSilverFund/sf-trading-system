@@ -8,19 +8,19 @@ if __name__ == "__main__":
     folder = "research/example/results/"
 
     # Asset returns (result of backtester)
-    data_file_path = folder + "backtest_exapmle.parquet"
+    data_file_path = folder + "backtest_example.parquet"
     asset_returns = AssetReturns(returns=pl.read_parquet(data_file_path))
 
     # Performance instance
     performance = Performance(
-        interval=Interval.DAILY,
+        interval=Interval.MONTHLY,
         asset_returns=asset_returns,
         annualize=True,
     )
 
     # Chart
-    title = "Example DAILY Backtest"
-    decomposed_plot_file_path = folder + "backtest_example_decomposed.png"
+    title = "Example Monthly Backtest"
+    decomposed_plot_file_path = folder + "backtest_example.png"
     performance.plot_returns(
         compounding=Compounding.SUM,
         title=title,

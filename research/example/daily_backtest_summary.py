@@ -21,7 +21,7 @@ if __name__ == "__main__":
     )
 
     # Chart
-    title = "Example Monthly Backtest"
+    title = "Example Daily Backtest"
     decomposed_plot_file_path = folder + "daily_backtest.png"
     performance.plot_returns(
         compounding=Compounding.SUM,
