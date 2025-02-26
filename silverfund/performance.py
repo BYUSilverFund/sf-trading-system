@@ -6,7 +6,7 @@ import statsmodels.formula.api as smf
 from tabulate import tabulate
 
 import silverfund.data_access_layer as dal
-from silverfund.enums import Compounding, Interval
+from silverfund.enums import Compounding, Interval, Turnover
 from silverfund.records import AssetReturns
 
 
@@ -88,7 +88,11 @@ class Performance:
         # Create portfolio returns dataframe
         self._portfolio_returns = (
             self._asset_returns.group_by("date")
-            .agg(pl.col("total_ret").sum(), pl.col("bmk_ret").sum(), pl.col("active_ret").sum())
+            .agg(
+                pl.col("total_ret").sum(),
+                pl.col("bmk_ret").sum(),
+                pl.col("active_ret").sum(),
+            )
             .sort("date")
         )
 
@@ -285,6 +289,27 @@ class Performance:
             .mean()
         )
 
+    @property
+    def abs_two_sided_turnover(self) -> float:
+        return (
+            self._asset_weights.with_columns(
+                pl.col("total_weight").shift(1).over("barrid").alias("total_weight_lag")
+            )
+            .with_columns(
+                (pl.col("total_weight") - pl.col("total_weight_lag"))
+                .abs()
+                .mul(self._annual_scale)
+                .alias("turnover")
+            )
+            .group_by("date")
+            .agg(pl.col("turnover").sum())["turnover"]
+            .mean()
+        )
+
+    @property
+    def holding_period(self) -> float:
+        return (2 / self.abs_two_sided_turnover) * 252
+
     def summary(self, save_file_path: str | None = None) -> str | None:
         """
         Generates a summary of performance metrics as a table.
@@ -330,7 +355,19 @@ class Performance:
             ],
             [
                 "Leverage (Mean)",
-                f"{self.leverage:.2}X",
+                f"{self.leverage:.2f}",
+                "",
+                "",
+            ],
+            [
+                "Two Sided Turnover (Mean)",
+                f"{self.abs_two_sided_turnover:.2f}",
+                "",
+                "",
+            ],
+            [
+                "Holding Period (Mean)",
+                f"{self.holding_period:.2f} Days",
                 "",
                 "",
             ],
@@ -390,17 +427,35 @@ class Performance:
         else:
             plt.savefig(save_file_path)
 
+    def plot_two_sided_turnover(
+        self, turnover: Turnover, title: str, save_file_path: str | None = None
+    ) -> None:
+        turnover_col = turnover.value + "_turnover"
+        df = (
+            self._asset_weights.with_columns(
+                pl.col("total_weight").shift(1).over("barrid").alias("total_weight_lag")
+            )
+            .with_columns(
+                (pl.col("total_weight") - pl.col("total_weight_lag"))
+                .abs()
+                .mul(self._annual_scale)
+                .alias(turnover_col)
+            )
+            .group_by("date")
+            .agg(pl.col(turnover_col).sum())
+        )
 
-if __name__ == "__main__":
+        # Plot
+        plt.figure(figsize=(10, 6))
 
-    df = pl.read_parquet(
-        "/Users/andrew/Projects/SilverFund/sf-trading-system/research/example/results/daily_backtest.parquet"
-    )
+        sns.lineplot(df, x="date", y=turnover_col)
 
-    p = Performance(Interval.MONTHLY, asset_returns=df)
+        plt.title(title)
+        plt.xlabel(None)
+        plt.ylabel(f"{turnover.value.title()} Turnover")
+        plt.grid()
 
-    print(p.summary())
-
-    p.plot_leverage(
-        title="Daily Example Portfolio Leverage", save_file_path="daily_backtest_lev.png"
-    )
+        if save_file_path is None:
+            plt.show()
+        else:
+            plt.savefig(save_file_path)
