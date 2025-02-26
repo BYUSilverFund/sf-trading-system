@@ -64,15 +64,25 @@ class Performance:
             interval=interval, start_date=self._start_date, end_date=self._end_date
         )
 
-        # Create total_ret, bmk_ret, and active_ret columns.
-        self._asset_returns = (
+        # Create total_weight, bmk_weight, and active_weight columns
+        self._asset_weights = (
             asset_returns.join(bmk, on=["date", "barrid"], how="left", suffix="_bmk")
             .with_columns((pl.col("weight") - pl.col("weight_bmk")).alias("weight_active"))
-            .with_columns(
-                (pl.col("weight") * pl.col("fwd_ret")).alias("total_ret"),
-                (pl.col("weight_bmk") * pl.col("fwd_ret")).alias("bmk_ret"),
-                (pl.col("weight_active") * pl.col("fwd_ret")).alias("active_ret"),
+            .select(
+                "date",
+                "barrid",
+                pl.col("weight").alias("total_weight"),
+                pl.col("weight_bmk").alias("bmk_weight"),
+                pl.col("weight_active").alias("active_weight"),
+                "fwd_ret",
             )
+        )
+
+        # Create total_ret, bmk_ret, and active_ret columns.
+        self._asset_returns = self._asset_weights.with_columns(
+            (pl.col("total_weight") * pl.col("fwd_ret")).alias("total_ret"),
+            (pl.col("bmk_weight") * pl.col("fwd_ret")).alias("bmk_ret"),
+            (pl.col("active_weight") * pl.col("fwd_ret")).alias("active_ret"),
         )
 
         # Create portfolio returns dataframe
@@ -262,6 +272,19 @@ class Performance:
     def active_alpha(self) -> float:
         return self._intercept("active_ret")
 
+    @property
+    def leverage(self) -> float:
+        return (
+            self._asset_weights.with_columns(
+                pl.col("total_weight").abs(),
+            )
+            .group_by("date")
+            .agg(
+                pl.col("total_weight").sum().alias("leverage"),
+            )["leverage"]
+            .mean()
+        )
+
     def summary(self, save_file_path: str | None = None) -> str | None:
         """
         Generates a summary of performance metrics as a table.
@@ -305,6 +328,12 @@ class Performance:
                 f"{self.benchmark_alpha:.2%}",
                 f"{self.active_alpha:.2%}",
             ],
+            [
+                "Leverage (Mean)",
+                f"{self.leverage:.2}X",
+                "",
+                "",
+            ],
         ]
 
         # Define headers
@@ -333,3 +362,45 @@ class Performance:
 
     def __str__(self) -> str:
         return self.summary()
+
+    def plot_leverage(self, title: str, save_file_path: str | None = None) -> None:
+        df = (
+            self._asset_weights.with_columns(
+                pl.col("total_weight").abs(),
+            )
+            .group_by("date")
+            .agg(
+                pl.col("total_weight").sum().alias("leverage"),
+            )
+            .sort("date")
+        )
+
+        # Plot
+        plt.figure(figsize=(10, 6))
+
+        sns.lineplot(df, x="date", y="leverage")
+
+        plt.title(title)
+        plt.xlabel(None)
+        plt.ylabel("Leverage")
+        plt.grid()
+
+        if save_file_path is None:
+            plt.show()
+        else:
+            plt.savefig(save_file_path)
+
+
+if __name__ == "__main__":
+
+    df = pl.read_parquet(
+        "/Users/andrew/Projects/SilverFund/sf-trading-system/research/example/results/daily_backtest.parquet"
+    )
+
+    p = Performance(Interval.MONTHLY, asset_returns=df)
+
+    print(p.summary())
+
+    p.plot_leverage(
+        title="Daily Example Portfolio Leverage", save_file_path="daily_backtest_lev.png"
+    )
