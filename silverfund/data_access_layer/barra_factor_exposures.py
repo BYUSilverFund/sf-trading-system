@@ -6,7 +6,7 @@ import polars as pl
 from dotenv import load_dotenv
 from tqdm import tqdm
 
-BARRA_FACTORS = [
+BARRA_RISK_FACTORS = [
     "BETA",
     "DIVYILD",
     "EARNQLTY",
@@ -23,6 +23,9 @@ BARRA_FACTORS = [
     "RESVOL",
     "SIZE",
     "VALUE",
+]
+
+BARRA_INDUSTRY_FACTORS = [
     "OILGSDRL",
     "OILGSEQP",
     "OILGSEXP",
