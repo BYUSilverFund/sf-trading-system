@@ -41,7 +41,9 @@ def load_benchmark(
     barra = load_barra_returns(interval=interval, start_date=start_date, end_date=end_date)
 
     # Merge universe and returns
-    benchmark = universe.join(barra, on=["date", "barrid"], how="left").sort(["date", "barrid"])
+    benchmark = barra.filter(
+        pl.struct(["date", "barrid"]).is_in(universe.select(["date", "barrid"]).to_struct())
+    )
 
     # Get total market cap by day
     total_market_cap = (

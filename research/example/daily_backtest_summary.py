@@ -1,3 +1,5 @@
+from datetime import date
+
 import polars as pl
 
 from silverfund.enums import Compounding, Interval
@@ -8,19 +10,19 @@ if __name__ == "__main__":
     folder = "research/example/results/"
 
     # Asset returns (result of backtester)
-    data_file_path = folder + "backtest_example.parquet"
+    data_file_path = folder + "daily_backtest.parquet"
     asset_returns = AssetReturns(returns=pl.read_parquet(data_file_path))
 
     # Performance instance
     performance = Performance(
-        interval=Interval.MONTHLY,
+        interval=Interval.DAILY,
         asset_returns=asset_returns,
         annualize=True,
     )
 
     # Chart
-    title = "Example Monthly Backtest"
-    decomposed_plot_file_path = folder + "backtest_example.png"
+    title = "Example Daily Backtest"
+    decomposed_plot_file_path = folder + "daily_backtest.png"
     performance.plot_returns(
         compounding=Compounding.SUM,
         title=title,
@@ -29,7 +31,7 @@ if __name__ == "__main__":
     )
 
     # Table
-    summary_file_path = folder + "backtest_example.txt"
+    summary_file_path = folder + "daily_backtest.txt"
     performance.summary(summary_file_path)
 
     # Print summary
