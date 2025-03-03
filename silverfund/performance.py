@@ -1,5 +1,3 @@
-from datetime import date
-
 import matplotlib.pyplot as plt
 import numpy as np
 import polars as pl
@@ -8,7 +6,7 @@ import statsmodels.formula.api as smf
 from tabulate import tabulate
 
 import silverfund.data_access_layer as dal
-from silverfund.enums import Compounding, Interval
+from silverfund.enums import Compounding, Interval, Turnover
 from silverfund.records import AssetReturns
 
 
@@ -38,8 +36,6 @@ class Performance:
     def __init__(
         self,
         interval: Interval,
-        start_date: date,
-        end_date: date,
         asset_returns: AssetReturns,
         annualize: bool = True,
     ) -> None:
@@ -53,8 +49,8 @@ class Performance:
             asset_returns (AssetReturns): Asset returns data.
             annualize (bool, optional): Whether to annualize the performance metrics. Defaults to True.
         """
-        self._start_date = start_date
-        self._end_date = end_date
+        self._start_date = asset_returns["date"].min()
+        self._end_date = asset_returns["date"].max()
         self._interval = interval
 
         # Set annualizing variables
@@ -64,23 +60,39 @@ class Performance:
         self._annualize = annualize
 
         # Load benchmark
-        bmk = dal.load_benchmark(interval=interval, start_date=start_date, end_date=end_date)
+        bmk = dal.load_benchmark(
+            interval=interval, start_date=self._start_date, end_date=self._end_date
+        )
 
-        # Create total_ret, bmk_ret, and active_ret columns.
-        self._asset_returns = (
+        # Create total_weight, bmk_weight, and active_weight columns
+        self._asset_weights = (
             asset_returns.join(bmk, on=["date", "barrid"], how="left", suffix="_bmk")
             .with_columns((pl.col("weight") - pl.col("weight_bmk")).alias("weight_active"))
-            .with_columns(
-                (pl.col("weight") * pl.col("fwd_ret")).alias("total_ret"),
-                (pl.col("weight_bmk") * pl.col("fwd_ret")).alias("bmk_ret"),
-                (pl.col("weight_active") * pl.col("fwd_ret")).alias("active_ret"),
+            .select(
+                "date",
+                "barrid",
+                pl.col("weight").alias("total_weight"),
+                pl.col("weight_bmk").alias("bmk_weight"),
+                pl.col("weight_active").alias("active_weight"),
+                "fwd_ret",
             )
+        )
+
+        # Create total_ret, bmk_ret, and active_ret columns.
+        self._asset_returns = self._asset_weights.with_columns(
+            (pl.col("total_weight") * pl.col("fwd_ret")).alias("total_ret"),
+            (pl.col("bmk_weight") * pl.col("fwd_ret")).alias("bmk_ret"),
+            (pl.col("active_weight") * pl.col("fwd_ret")).alias("active_ret"),
         )
 
         # Create portfolio returns dataframe
         self._portfolio_returns = (
             self._asset_returns.group_by("date")
-            .agg(pl.col("total_ret").sum(), pl.col("bmk_ret").sum(), pl.col("active_ret").sum())
+            .agg(
+                pl.col("total_ret").sum(),
+                pl.col("bmk_ret").sum(),
+                pl.col("active_ret").sum(),
+            )
             .sort("date")
         )
 
@@ -264,6 +276,50 @@ class Performance:
     def active_alpha(self) -> float:
         return self._intercept("active_ret")
 
+    @property
+    def leverage(self) -> float:
+        return (
+            self._asset_weights.with_columns(
+                pl.col("total_weight").abs(),
+            )
+            .group_by("date")
+            .agg(
+                pl.col("total_weight").sum().alias("leverage"),
+            )["leverage"]
+            .mean()
+        )
+
+    @property
+    def two_sided_turnover(self) -> float:
+        turnover = (
+            self._asset_weights.with_columns(
+                pl.col("total_weight").shift(1).over("barrid").alias("total_weight_lag")
+            )
+            .with_columns(
+                (pl.col("total_weight") - pl.col("total_weight_lag")).abs().alias("turnover")
+            )
+            .group_by("date")
+            .agg(pl.col("turnover").sum())["turnover"]
+            .mean()
+        )
+
+        if self._annualize:
+            turnover *= self._annual_scale
+
+        return turnover
+
+    @property
+    def holding_period(self) -> float:
+        period = 2 / self.two_sided_turnover
+
+        if self._annualize:
+            period *= 365
+
+        elif self._interval == Interval.MONTHLY:
+            period *= 22
+
+        return period
+
     def summary(self, save_file_path: str | None = None) -> str | None:
         """
         Generates a summary of performance metrics as a table.
@@ -307,6 +363,24 @@ class Performance:
                 f"{self.benchmark_alpha:.2%}",
                 f"{self.active_alpha:.2%}",
             ],
+            [
+                "Leverage (Mean)",
+                f"{self.leverage:.2f}X",
+                "",
+                "",
+            ],
+            [
+                "Two Sided Turnover (Mean)",
+                f"{self.two_sided_turnover:.2f}X",
+                "",
+                "",
+            ],
+            [
+                "Holding Period (Mean)",
+                f"{self.holding_period:.2f} Days",
+                "",
+                "",
+            ],
         ]
 
         # Define headers
@@ -335,3 +409,60 @@ class Performance:
 
     def __str__(self) -> str:
         return self.summary()
+
+    def plot_leverage(self, title: str, save_file_path: str | None = None) -> None:
+        df = (
+            self._asset_weights.with_columns(
+                pl.col("total_weight").abs(),
+            )
+            .group_by("date")
+            .agg(
+                pl.col("total_weight").sum().alias("leverage"),
+            )
+            .sort("date")
+        )
+
+        # Plot
+        plt.figure(figsize=(10, 6))
+
+        sns.lineplot(df, x="date", y="leverage")
+
+        plt.title(title)
+        plt.xlabel(None)
+        plt.ylabel("Leverage (X)")
+        plt.grid()
+
+        if save_file_path is None:
+            plt.show()
+        else:
+            plt.savefig(save_file_path)
+
+    def plot_two_sided_turnover(
+        self, turnover: Turnover, title: str, save_file_path: str | None = None
+    ) -> None:
+        turnover_col = turnover.value + "_turnover"
+        df = (
+            self._asset_weights.with_columns(
+                pl.col("total_weight").shift(1).over("barrid").alias("total_weight_lag")
+            )
+            .with_columns(
+                (pl.col("total_weight") - pl.col("total_weight_lag")).abs().alias(turnover_col)
+            )
+            .group_by("date")
+            .agg(pl.col(turnover_col).sum())
+        )
+
+        # Plot
+        plt.figure(figsize=(10, 6))
+
+        sns.lineplot(df, x="date", y=turnover_col)
+
+        plt.title(title)
+        plt.xlabel(None)
+        plt.ylabel(f"{turnover.value.title()} Two Sided Turnover (X)")
+        plt.grid()
+
+        if save_file_path is None:
+            plt.show()
+        else:
+            plt.savefig(save_file_path)

@@ -17,7 +17,7 @@ if __name__ == "__main__":
     # Date range
     start_date = date(2023, 1, 1)
     end_date = date(2023, 12, 31)
-    interval = Interval.MONTHLY
+    interval = Interval.DAILY
 
     # Define strategy
     strategy = Strategy(
@@ -57,4 +57,4 @@ if __name__ == "__main__":
     # Save results
     folder = Path("research/example/results")
     os.makedirs(folder, exist_ok=True)
-    asset_returns.write_parquet(folder / "backtest_example.parquet")
+    asset_returns.write_parquet(folder / "daily_backtest.parquet")
