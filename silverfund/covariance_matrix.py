@@ -55,7 +55,7 @@ def factor_exposure_matrix_constructor(date_: date, barrids: list[str]) -> pl.Da
     barrids_df = pl.DataFrame({"barrid": barrids})
 
     # Load
-    bfe = dal.load_factor_exposures(date_)
+    bfe = dal.load_factor_exposures_by_date(date_)
 
     # Factors
     factors = bfe["factor"].unique().sort().to_list()

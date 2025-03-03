@@ -20,7 +20,7 @@ These functions help streamline access to structured market and risk model data.
 """
 
 from .barra_factor_covariances import load_factor_covariances
-from .barra_factor_exposures import load_factor_exposures
+from .barra_factor_exposures import load_factor_exposures, load_factor_exposures_by_date
 from .barra_returns import load_barra_returns
 from .barra_specific_returns import load_specific_returns
 from .barra_specific_risk import load_specific_risk
@@ -38,6 +38,7 @@ __all__ = [
     "load_crsp",
     "load_specific_returns",
     "load_factor_covariances",
+    "load_factor_exposures_by_date",
     "load_factor_exposures",
     "load_specific_risk",
     "load_benchmark",
