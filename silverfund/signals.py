@@ -18,3 +18,12 @@ def momentum(data: pl.DataFrame) -> Signal:
         .sort(["barrid", "date"])
     )
     return Signal(signals, "mom")
+
+
+def idio_mom(data: pl.DataFrame) -> Signal:
+    signals = (
+        data.with_columns(pl.col("idio_mom_5f"))
+        .select(["date", "barrid", "idio_mom_5f"])
+        .sort(["barrid", "date"])
+    )
+    return Signal(signals, "idio_mom_5f")
