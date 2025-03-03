@@ -290,7 +290,47 @@ class Performance:
         )
 
     @property
-    def two_sided_turnover(self) -> float:
+    def abs_two_sided_turnover(self) -> float:
+        turnover = (
+            self._asset_weights.with_columns(
+                pl.col("total_weight").shift(1).over("barrid").alias("total_weight_lag")
+            )
+            .with_columns(
+                (pl.col("total_weight") - pl.col("total_weight_lag")).abs().alias("turnover")
+            )
+            .group_by("date")
+            .agg(pl.col("turnover").sum())["turnover"]
+            .mean()
+        )
+
+        if self._annualize:
+            turnover *= self._annual_scale
+
+        return turnover
+
+    @property
+    def rel_two_sided_turnover(self) -> float:
+        turnover = (
+            self._asset_weights.with_columns(
+                pl.col("total_weight").abs().alias("abs_total_weight"),
+                pl.col("total_weight").shift(1).over("barrid").alias("total_weight_lag"),
+            )
+            .with_columns(
+                (pl.col("total_weight") - pl.col("total_weight_lag"))
+                .abs()
+                .alias("absolute_turnover")
+            )
+            .group_by("date")
+            .agg(
+                pl.col("absolute_turnover").sum(),
+                pl.col("total_weight").sum().alias("leverage"),
+            )
+            .with_columns(
+                pl.col("absolute_turnover").truediv(pl.col("leverage")).alias("relative_turnover")
+            )["relative_turnover"]
+            .mean()
+        )
+
         turnover = (
             self._asset_weights.with_columns(
                 pl.col("total_weight").shift(1).over("barrid").alias("total_weight_lag")
@@ -310,7 +350,7 @@ class Performance:
 
     @property
     def holding_period(self) -> float:
-        period = 2 / self.two_sided_turnover
+        period = 2 / self.abs_two_sided_turnover
 
         if self._annualize:
             period *= 365
@@ -370,8 +410,14 @@ class Performance:
                 "",
             ],
             [
-                "Two Sided Turnover (Mean)",
-                f"{self.two_sided_turnover:.2f}X",
+                "Absolute Turnover (Mean)",
+                f"{self.abs_two_sided_turnover:.2f}X",
+                "",
+                "",
+            ],
+            [
+                "Relative Turnover (Mean)",
+                f"{self.rel_two_sided_turnover:.2f}X",
                 "",
                 "",
             ],
@@ -440,22 +486,48 @@ class Performance:
     def plot_two_sided_turnover(
         self, turnover: Turnover, title: str, save_file_path: str | None = None
     ) -> None:
-        turnover_col = turnover.value + "_turnover"
-        df = (
-            self._asset_weights.with_columns(
-                pl.col("total_weight").shift(1).over("barrid").alias("total_weight_lag")
+        if turnover == Turnover.ABSOLUTE:
+            df = (
+                self._asset_weights.with_columns(
+                    pl.col("total_weight").shift(1).over("barrid").alias("total_weight_lag")
+                )
+                .with_columns(
+                    (pl.col("total_weight") - pl.col("total_weight_lag"))
+                    .abs()
+                    .alias("absolute_turnover")
+                )
+                .group_by("date")
+                .agg(pl.col("absolute_turnover").sum())
             )
-            .with_columns(
-                (pl.col("total_weight") - pl.col("total_weight_lag")).abs().alias(turnover_col)
+
+        if turnover == Turnover.RELATIVE:
+            df = (
+                self._asset_weights.with_columns(
+                    pl.col("total_weight").abs().alias("abs_total_weight"),
+                    pl.col("total_weight").shift(1).over("barrid").alias("total_weight_lag"),
+                )
+                .with_columns(
+                    (pl.col("total_weight") - pl.col("total_weight_lag"))
+                    .abs()
+                    .alias("absolute_turnover")
+                )
+                .group_by("date")
+                .agg(
+                    pl.col("absolute_turnover").sum(),
+                    pl.col("total_weight").sum().alias("leverage"),
+                )
+                .with_columns(
+                    pl.col("absolute_turnover")
+                    .truediv(pl.col("leverage"))
+                    .alias("relative_turnover")
+                )
+                .sort("date")
             )
-            .group_by("date")
-            .agg(pl.col(turnover_col).sum())
-        )
 
         # Plot
         plt.figure(figsize=(10, 6))
 
-        sns.lineplot(df, x="date", y=turnover_col)
+        sns.lineplot(df, x="date", y=f"{turnover.value}_turnover")
 
         plt.title(title)
         plt.xlabel(None)
