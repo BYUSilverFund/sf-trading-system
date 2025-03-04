@@ -57,4 +57,4 @@ if __name__ == "__main__":
     # Save results
     folder = Path("research/example/results")
     os.makedirs(folder, exist_ok=True)
-    asset_returns.write_parquet(folder / "backtest_example.parquet")
+    asset_returns.write_parquet(folder / "monthly_backtest.parquet")
