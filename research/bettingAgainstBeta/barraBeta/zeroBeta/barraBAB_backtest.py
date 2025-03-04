@@ -12,7 +12,7 @@ from silverfund.strategies import Strategy
 
 if __name__ == "__main__":
     # Date range
-    start_date = date(1996, 1, 1)
+    start_date = date(2022, 1, 1)
     end_date = date(2023, 12, 31)
     interval = Interval.DAILY
 
@@ -23,6 +23,7 @@ if __name__ == "__main__":
         alpha_constructor=partial(grindold_kahn, interval=interval),
         portfolio_constructor=mean_variance_efficient,
         constraints=[
+            full_investment,
             partial(zero_beta, interval=interval),
         ],
     )
@@ -53,4 +54,4 @@ if __name__ == "__main__":
     print("-" * 20 + " Asset Returns " + "-" * 20)
     print(pnl)
 
-    pnl.write_parquet("barraBAB_backtest.parquet")
+    pnl.write_parquet("ZB_backtest.parquet")

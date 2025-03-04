@@ -4,7 +4,7 @@ import polars as pl
 import seaborn as sns
 
 # Load data
-pnl = pl.read_parquet("barraBAB_backtest.parquet")
+pnl = pl.read_parquet("ZB_backtest.parquet")
 
 # Aggregate to portfolio level
 portfolio_returns = (
@@ -32,7 +32,7 @@ print(portfolio_returns)
 # Chart
 plt.figure(figsize=(10, 6))
 sns.lineplot(data=portfolio_returns, x="date", y="portfolio_cumret")
-plt.title("Monthly BAB Backtest")
+plt.title("Daily Barra Beta + Zero Beta Backtest")
 plt.xlabel(None)
 plt.ylabel("Cummulative Sum Returns (%)")
 plt.savefig("backtest_results.png", dpi=300)

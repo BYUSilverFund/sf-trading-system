@@ -54,4 +54,4 @@ if __name__ == "__main__":
     print("-" * 20 + " Asset Returns " + "-" * 20)
     print(pnl)
 
-    pnl.write_parquet("lowBeta_backtest.parquet")
+    pnl.write_parquet("LB_backtest.parquet")

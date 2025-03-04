@@ -7,7 +7,7 @@ from silverfund.performance import Performance
 from silverfund.records import AssetReturns
 
 # Asset returns (result of backtester)
-data_file_path = "barraBAB_backtest.parquet"
+data_file_path = "LOUB_backtest.parquet"
 asset_returns = AssetReturns(returns=pl.read_parquet(data_file_path))
     
 # Performance instance
@@ -21,7 +21,7 @@ performance = Performance(
 
 # Chart
 title = "Long Only Unit Beta Daily Backtest"
-decomposed_plot_file_path = "barraBAB_decomposed.png"
+decomposed_plot_file_path = "LOUB_decomposed.png"
 performance.plot_returns(
     compounding=Compounding.SUM,
     title=title,
@@ -30,7 +30,7 @@ performance.plot_returns(
 )
 
 # Table
-summary_file_path = "barraBAB_summary.txt"
+summary_file_path = "LOUB_summary.txt"
 performance.summary(summary_file_path)
 
 # Print summary

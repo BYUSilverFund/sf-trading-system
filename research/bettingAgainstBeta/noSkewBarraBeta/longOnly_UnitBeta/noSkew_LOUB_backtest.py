@@ -7,19 +7,19 @@ from silverfund.constraints import *
 from silverfund.enums import Interval
 from silverfund.portfolios import mean_variance_efficient
 from silverfund.scores import z_score
-from silverfund.signals import barraBAB
+from silverfund.signals import barraBAB_noskew
 from silverfund.strategies import Strategy
 
 if __name__ == "__main__":
     # Date range
     start_date = date(1996, 1, 1)
     end_date = date(2023, 12, 31)
-    interval = Interval.DAILY
+    interval = Interval.MONTHLY
 
     # Define strategy
     strategy = Strategy(
-        signal_constructor=barraBAB,
-        score_constructor=partial(z_score, signal_col="predbeta"),
+        signal_constructor=barraBAB_noskew,
+        score_constructor=partial(z_score, signal_col="noskew_predbeta"),
         alpha_constructor=partial(grindold_kahn, interval=interval),
         portfolio_constructor=mean_variance_efficient,
         constraints=[
@@ -54,4 +54,4 @@ if __name__ == "__main__":
     print("-" * 20 + " Asset Returns " + "-" * 20)
     print(pnl)
 
-    pnl.write_parquet("barraBAB_backtest.parquet")
+    pnl.write_parquet("noSkew_LOUB_backtest.parquet")
