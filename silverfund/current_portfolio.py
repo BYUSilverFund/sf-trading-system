@@ -47,6 +47,7 @@ def get_current_portfolio(
     interval: Interval,
     look_back: int,
     current_date: date | None = None,
+    barrids: list[str] | None = None,
 ) -> pl.DataFrame:
     """
     Construct the current portfolio based on a given strategy.
@@ -71,6 +72,9 @@ def get_current_portfolio(
     # Get universe
     universe = dal.load_universe(interval=interval, start_date=start_date, end_date=end_date)
 
+    # Filter to barrids
+    universe = universe.filter(pl.col("barrid").is_in(barrids)).sort("barrid")
+
     # Get returns data
     data = universe.join(
         dal.load_barra_returns(interval=interval, start_date=start_date, end_date=end_date).sort(
@@ -79,6 +83,9 @@ def get_current_portfolio(
         on=["barrid", "date"],
         how="left",
     )
+
+    # Filter to price greater than 5
+    data = data.filter(pl.col("price").gt(5)).sort(["barrid", "date"])
 
     # Construct signals, scores, and alphas
     signals = strategy.signal_constructor(data)
@@ -125,12 +132,15 @@ if __name__ == "__main__":
         ],
     )
 
+    barrids = pl.read_csv("ticker_back_2025-03-12.csv")["barrid"].unique().sort()
+
     # Get current portfolio
     current_portfolio = get_current_portfolio(
         strategy=strategy,
         interval=interval,
         look_back=365,
         current_date=date(2024, 11, 29),
+        barrids=barrids,
     ).drop("date")
 
     # Log
