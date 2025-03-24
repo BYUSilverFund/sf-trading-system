@@ -1,17 +1,23 @@
-import os
-from datetime import datetime
+# import os
+import sys
+from datetime import datetime, timezone
 
 import numpy as np
 import pandas as pd
 
-from silverfund.trader.api.margin_impact import calc_margin_impact
+# from silverfund.trader.api.margin_impact import calc_margin_impact
 from silverfund.trader.api.portfolio_info import get_portfolio_holdings
 from silverfund.trader.api.security_info import get_security_info
 from silverfund.trader.api.trader import *
 from silverfund.trader.utils.validation import *
 
 
-def main():
+def get_timestamp():
+    current_utc_time = datetime.now().astimezone(timezone.utc)
+    return current_utc_time.day, current_utc_time.month, current_utc_time.year
+
+
+def main(account_type):
     """
     Rebalance the portfolio in TWS to match the optimal weights provided in the input DataFrame
 
@@ -19,11 +25,16 @@ def main():
     price for each security, calculates the needed change in position based on the current
     positions and their closing prices, and places orders in TWS for each needed change.
     """
+    if account_type != "paper" and account_type != "live":
+        print("Enter 'paper' or 'live' as argument")
+        quit()
 
     day, month, year = get_timestamp()
 
     # # # INSERT FILE PATH OF CSV FILE WITH OPTIMAL WEIGHTS IN THE BELOW LINE # # #
-    optimal_wts_df = pd.read_csv("optimal_weights_{year}-{month:02d}-{day:02d}.csv")
+    optimal_wts_df = pd.read_csv(
+        f"silverfund/trader/data/optimal_weights_{year}-{month:02d}-{day:02d}.csv"
+    )
 
     optimal_wts_df["ticker"] = [
         " ".join(ticker.split(".")) for ticker in optimal_wts_df["ticker"].values
@@ -39,7 +50,7 @@ def main():
     holdings_df = get_portfolio_holdings()
 
     # Validate and retrieve the holding prices for new stocks
-    last_price_df = validate_pricing_of_new_stocks(holdings_df, optimal_wts_df)
+    last_price_df = validate_pricing_of_new_stocks(holdings_df, optimal_wts_df, account_type)
 
     ### Compute the target position (quantity) for each security of the optimal wts portfolio ###
     mkt_val = holdings_df["marketValue"].sum()
@@ -50,7 +61,6 @@ def main():
     optimal_wts_df = pd.merge(
         optimal_wts_df, holdings_df[["marketPrice"]], how="outer", left_index=True, right_index=True
     )
-    print(optimal_wts_df["marketPrice"])
     for ticker in optimal_wts_df[optimal_wts_df.isna().any(axis=1)].index:
         if ticker in last_price_df.index:
             optimal_wts_df.loc[ticker, "marketPrice"] = last_price_df.loc[ticker, "price"]
@@ -85,15 +95,29 @@ def main():
     order_df = pd.merge(
         order_df, get_security_info(order_df.index), how="inner", left_index=True, right_index=True
     )
-    order_df = calc_margin_impact(order_df)
-
+    # order_df = calc_margin_impact(order_df)
+    error_list = []
     ### Create an instance of the Trader class, connect to TWS, and run the app ###
-    app = Trader(order_df, error_list)
-    app.connect("127.0.0.1", 7496, 9)
-    app.run()
+    while not order_df.empty:
+        print("_______ PLACING ORDERS _______\n")
+        app = Trader(order_df, error_list, account_type)
+        app.connect("127.0.0.1", 7496, 9)
+        app.run()
+        # get the portfolio holdings again
+        current_portfolio = get_portfolio_holdings()
+        # check aganist the original rebalanced_df
+        order_df["quantity"] = rebalanced_df["quantity"] - current_portfolio["position"]
+        # Drop rows where quantity is NaN (i.e., tickers missing from one of the DataFrames)
+        order_df.dropna(subset=["quantity"], inplace=True)
+        # Drop rows where quantity is exactly 0
+        order_df = order_df[order_df["quantity"] != 0]
+        print(order_df.head(10))
+        goOn = input("Continue? Y/N\n")
+        if goOn != "Y" and goOn != "y":
+            quit()  # End the program early if the user wishes not to drop the invalid entries
+
     # Record any errors that occurred during the order process in the output DataFrame
     # Initialize an empty list to hold tickers whose orders have errors in execution
-    error_list = []
     for ticker in error_list:
         rebalanced_df.loc[ticker, "error"] = "Yes"
 
@@ -111,12 +135,10 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
-
-
-def get_timestamp():
-    current_utc_time = datetime.now(datetime.astimezone.utc)
-    return current_utc_time.day, current_utc_time.month, current_utc_time.year
+    if len(sys.argv) > 1:
+        main(sys.argv[1])  # Take the first argument
+    else:
+        print("No argument provided.")
 
 
 # Query Fills

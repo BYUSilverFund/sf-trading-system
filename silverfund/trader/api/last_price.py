@@ -23,13 +23,22 @@ class LastPrice(EWrapper, EClient):
         An empty list to hold tickers that cannot be identified by TWS
     """
 
-    def __init__(self, last_price_df, ticker_list, invalid_ticker_list, second_try=False):
+    def __init__(
+        self, last_price_df, ticker_list, invalid_ticker_list, account_type, second_try=False
+    ):
 
         EClient.__init__(self, self)
         self.last_price_df = last_price_df
         self.ticker_list = ticker_list
         self.invalid_ticker_list = invalid_ticker_list
-
+        if account_type == "paper":
+            self.market_data_type = 3
+            self.bid_tick_type = 68
+            self.ask_tick_type = 67
+        else:
+            self.market_data_type = 1
+            self.bid_tick_type = 4
+            self.ask_tick_type = 2
         self.reqId = 0  # Initial index for market data requests
         self.n = len(ticker_list) + len(last_price_df)  # Total number of securities needing data
         # Note: On second pass, invalid tickers are not included in this total
@@ -38,7 +47,9 @@ class LastPrice(EWrapper, EClient):
     def nextValidId(self, orderId: int):
         """Main function. Automatically executed when the app is run."""
 
-        self.reqMarketDataType(1)  # Sets all data requests to request DELAYED data
+        self.reqMarketDataType(
+            self.market_data_type
+        )  # Sets all data requests to request DELAYED data
 
         print(
             f"Retrieving last price data for {len(self.ticker_list)} securities. Approximate wait time: {round(0.04*len(self.ticker_list))} seconds"
@@ -89,13 +100,17 @@ class LastPrice(EWrapper, EClient):
         so that the following code can be executed for each security.
         """
         if self.second_try:
-            if tickType == 2:  # 67 corresponds to the delayed ask price, 2 for live
+            if (
+                tickType == self.ask_tick_type
+            ):  # 67 corresponds to the delayed ask price, 2 for live
                 if price <= 0:
                     print(f"ERROR: Retrieved price of {price} for {self.ticker_list[reqId]}.")
                 else:
                     self.last_price_df.loc[self.ticker_list[reqId]] = price
         else:
-            if tickType == 4:  # 68 corresponds to the delayed last price, 4 for live
+            if (
+                tickType == self.bid_tick_type
+            ):  # 68 corresponds to the delayed last price, 4 for live
                 if price <= 0:
                     print(f"ERROR: Retrieved price of {price} for {self.ticker_list[reqId]}.")
                 else:
@@ -155,7 +170,7 @@ class LastPrice(EWrapper, EClient):
             Timer(5, self.wrap_up).start()
 
 
-def get_last_price(ticker_list, port=7496):
+def get_last_price(ticker_list, account_type, port=7496):
     """Calls LastPrice TWS API app to get closing prices for each security in ticker_list."""
 
     # Initialize an empty dataframe to hold closing prices and a list to hold unrecognized tickers
@@ -163,7 +178,7 @@ def get_last_price(ticker_list, port=7496):
     invalid_ticker_list = []
 
     # Create an instance of the LastPrice class, connect to the TWS, and run the app
-    app = LastPrice(last_price_df, ticker_list, invalid_ticker_list)
+    app = LastPrice(last_price_df, ticker_list, invalid_ticker_list, account_type)
     app.connect("127.0.0.1", port, 0)
     app.run()
 
@@ -205,7 +220,9 @@ def get_last_price(ticker_list, port=7496):
             ]
 
             # Try to receive data for these securities a second time
-            app = LastPrice(last_price_df, second_try_ticker_list, [], second_try=True)
+            app = LastPrice(
+                last_price_df, second_try_ticker_list, [], account_type, second_try=True
+            )
             app.connect("127.0.0.1", port, 0)
             app.run()
 

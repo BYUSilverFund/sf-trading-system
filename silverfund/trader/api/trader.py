@@ -15,7 +15,7 @@ class Trader(EWrapper, EClient):
     Internal use only.
     """
 
-    def __init__(self, order_df, error_list, quantity_col="quantity"):
+    def __init__(self, order_df, error_list, account_type, quantity_col="quantity"):
 
         EClient.__init__(self, self)
         self.order_df = order_df.copy()
@@ -28,6 +28,14 @@ class Trader(EWrapper, EClient):
         self.received_bid_idx_list = []
         self.received_ask_idx_list = []
         self.second_try = True
+        if account_type == "paper":
+            self.market_data_type = 3
+            self.bid_tick_type = 68
+            self.ask_tick_type = 67
+        else:
+            self.market_data_type = 1
+            self.bid_tick_type = 4
+            self.ask_tick_type = 2
 
     def nextValidId(self, orderId):
         """Automatically executed whenever the app is run. Starts the order process"""
@@ -42,7 +50,7 @@ class Trader(EWrapper, EClient):
 
     def error(self, reqId: int, errorCode: int, errorString: str, advancedOrderRejectJson=""):
 
-        if errorCode in [399, 504, 2104, 2106, 2158, 2161, 10167]:
+        if errorCode in [399, 202, 504, 2104, 2106, 2158, 2161, 10167]:
             return  # These codes do not affect the transmission of the order. Do nothing.
 
         else:
@@ -64,10 +72,10 @@ class Trader(EWrapper, EClient):
         self.can_disconnect = True
 
     def tickPrice(self, reqId, tickType, price, attrib):
-        if tickType == 1:  # 66 corresponds to the delayed bid price, 1 for live
+        if tickType == self.bid_tick_type:  # 66 corresponds to the delayed bid price, 1 for live
             self.bid_price_df.loc[self.order_df.index.values[reqId]] = price
             self.received_bid_idx_list.append(reqId)
-        if tickType == 2:  # 67 corresponds to the delayed ask price, 2 for live
+        if tickType == self.ask_tick_type:  # 67 corresponds to the delayed ask price, 2 for live
             self.ask_price_df.loc[self.order_df.index.values[reqId]] = price
             self.received_ask_idx_list.append(reqId)
             # Result: self.price_df now contains a new entry with the ticker as the index
@@ -91,7 +99,7 @@ class Trader(EWrapper, EClient):
 
         print("Now calculating limit prices for each security:")
 
-        self.reqMarketDataType(1)
+        self.reqMarketDataType(self.market_data_type)
         for i, contract in enumerate(self.contracts):
 
             self.reqMktData(i, contract, "", False, False, [])
@@ -205,6 +213,12 @@ class Trader(EWrapper, EClient):
 
         # Allow a little extra time for all orders to go through, then disconnect.
         sleep(10)
+
+        print("Cancelling all open orders...")
+        self.reqGlobalCancel()
+        sleep(5)  # Give time for orders to be cancelled
+        print("All orders canceled.")
+
         while not self.can_disconnect:
             sleep(3)
         self.disconnect()

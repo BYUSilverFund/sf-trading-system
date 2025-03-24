@@ -93,6 +93,7 @@ def get_security_info(ticker_list, port=7496):
             f"Failed to verify minimum limit price increment details for the following {len(no_min_tick_list)} securities\n"
         )
         print(no_min_tick_list)
+        print()
         print("Using default minimum price increment of 0.01.")
         for ticker in no_min_tick_list:
             security_info_df.loc[ticker] = 0.01
