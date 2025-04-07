@@ -19,8 +19,6 @@ Available functions:
 These functions help streamline access to structured market and risk model data.
 """
 
-from .load_assets import load_assets
+from .assets import get_assets_columns, load_assets
 
-__all__ = [
-    "load_assets",
-]
+__all__ = ["load_assets", "get_assets_columns"]

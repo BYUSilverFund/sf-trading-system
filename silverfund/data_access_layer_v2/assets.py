@@ -28,6 +28,20 @@ class Table:
     def read(self, year: Optional[int] = None) -> pl.DataFrame:
         return pl.read_parquet(self.file_path(year))
 
+    def columns(self) -> pl.DataFrame:
+        pl.Config.set_tbl_rows(-1)
+        schema = self.scan().collect_schema()
+        df_str = str(
+            pl.DataFrame(
+                {
+                    "column": list(schema.keys()),
+                    "dtype": [str(t) for t in schema.values()],
+                }
+            )
+        )
+        pl.Config.set_tbl_rows(10)
+        return df_str
+
 
 assets_table = Table("assets")
 
@@ -90,19 +104,5 @@ def load_assets(
         )
 
 
-if __name__ == "__main__":
-    start_date = date(2024, 1, 1)
-    end_date = date.today()
-    df = load_assets(
-        start_date=start_date,
-        end_date=end_date,
-        in_universe=True,
-        columns=[
-            "date",
-            "barrid",
-            "price",
-            "return",
-            "market_cap",
-        ],
-    )
-    print(df)
+def get_assets_columns() -> str:
+    return assets_table.columns()
