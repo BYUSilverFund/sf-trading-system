@@ -35,24 +35,14 @@ def create_cummulative_returns(portfolios: pl.DataFrame) -> pl.DataFrame:
         .unpivot(index="date", variable_name="bin", value_name="return")
         .sort(["date", "bin"])
         # Cummulative log return
-        .with_columns(
-            pl.col("return")
-            .truediv(100)
-            .log1p()
-            .cum_sum()
-            .mul(100)
-            .over("bin")
-            .alias("cummulative_return")
-        )
+        .with_columns(pl.col("return").truediv(100).log1p().cum_sum().mul(100).over("bin").alias("cummulative_return"))
         # Bins wide
         .pivot(index="date", on="bin", values="cummulative_return")
         .sort("date")
     )
 
 
-def create_backtest_chart(
-    portfolios: pl.DataFrame, cummulative_returns: pl.DataFrame, signal: str
-) -> None:
+def create_backtest_chart(portfolios: pl.DataFrame, cummulative_returns: pl.DataFrame, signal: str) -> None:
     signal_title = signal.replace("_", " ").title()
     # ----- Create Chart -----
     sharpe = portfolios["spread"].mean() / portfolios["spread"].std() * np.sqrt(252)
@@ -82,8 +72,6 @@ def create_backtest_chart(
 start_date = date(1995, 1, 1)
 end_date = date(2024, 12, 31)
 
-# print(dal.get_assets_columns())
-
 # ----- Load Data -----
 data = dal.assets.load(
     start_date=start_date,
@@ -104,10 +92,6 @@ data = dal.assets.load(
 
 print("Data", data)
 
-data = data.filter(pl.col("russell_2000")).sort(["barrid", "date"])
-
-print("Data", data)
-
 # ----- Compute Signals -----
 signals = (
     data
@@ -115,25 +99,11 @@ signals = (
     .sort(["barrid", "date"])
     .with_columns(
         # Vanilla Momentum
-        pl.col("return")
-        .truediv(100)
-        .log1p()
-        .rolling_sum(window_size=230)
-        .over("barrid")
-        .alias("momentum"),
+        pl.col("return").truediv(100).log1p().rolling_sum(window_size=230).over("barrid").alias("momentum"),
         # Idiosyncratic Momentum
-        pl.col("specific_return")
-        .truediv(100)
-        .log1p()
-        .rolling_sum(window_size=230)
-        .over("barrid")
-        .alias("idiosyncratic_momentum"),
+        pl.col("specific_return").truediv(100).log1p().rolling_sum(window_size=230).over("barrid").alias("idiosyncratic_momentum"),
         # Volatility
-        pl.col("return")
-        .truediv(100)
-        .rolling_std(window_size=230)
-        .over("barrid")
-        .alias("volatility"),
+        pl.col("return").truediv(100).rolling_std(window_size=230).over("barrid").alias("volatility"),
     )
     # Lag
     .with_columns(
@@ -142,9 +112,7 @@ signals = (
         pl.col("volatility").shift(22).over("barrid"),
     )
     # Volatility adjusted momentum
-    .with_columns(
-        pl.col("momentum").truediv(pl.col("volatility")).alias("volatility_adjusted_momentum")
-    )
+    .with_columns(pl.col("momentum").truediv(pl.col("volatility")).alias("volatility_adjusted_momentum"))
     # Percent up and percent down days
     .with_columns(
         pl.col("return").gt(0).cast(pl.Int32).alias("positive"),
@@ -156,30 +124,23 @@ signals = (
         pl.col("negative").rolling_sum(window_size=22).over("barrid"),
     )
     # Information discreteness
-    .with_columns(
-        pl.col("momentum")
-        .sign()
-        .mul(pl.col("negative").sub(pl.col("positive")).truediv(22))
-        .alias("id")
-    )
+    .with_columns(pl.col("momentum").sign().mul(pl.col("negative").sub(pl.col("positive")).truediv(22)).alias("id"))
     .with_columns(pl.col("id").shift(1).over("barrid"))
     # Frog in the pan signal
-    .with_columns(
-        pl.col("momentum")
-        .sub(pl.col("momentum").mean())
-        .truediv(pl.col("momentum").std())
-        .over("date")
-        .alias("z_momentum")
-    )
-    .with_columns(
-        pl.col("id").sub(pl.col("id").mean()).truediv(pl.col("id").std()).over("date").alias("z_id")
-    )
+    .with_columns(pl.col("momentum").sub(pl.col("momentum").mean()).truediv(pl.col("momentum").std()).over("date").alias("z_momentum"))
+    .with_columns(pl.col("id").sub(pl.col("id").mean()).truediv(pl.col("id").std()).over("date").alias("z_id"))
     .with_columns(pl.col("z_momentum").mul(pl.col("z_id")).alias("frog_in_the_pan_momentum"))
     # Rename vanilla momentum
     .with_columns(pl.col("momentum").alias("vanilla_momentum"))
     # Price and null filter
     .with_columns(pl.col("price").shift(1).over("barrid").alias("price_lag"))
-    .filter(pl.col("price_lag").gt(5))
+)
+
+print("Signals", signals)
+print(signals.group_by("date").agg(pl.len()).sort("date"))
+
+signals = (
+    signals.filter(pl.col("price_lag").gt(5))
     .drop_nulls(
         [
             "vanilla_momentum",
