@@ -1,11 +1,7 @@
 import polars as pl
 
-from silverfund.data_access_layer_v2.schema.tables import (
-        assets_table, 
-        crsp_daily_table,
-        crsp_events_table, 
-        crsp_monthly_table
-    )
+from silverfund.data_access_layer_v2.schema.tables import (assets_table, crsp_daily_table,
+                                                           crsp_events_table, crsp_monthly_table)
 
 russell_rebalance_dates = (
     assets_table.scan()
