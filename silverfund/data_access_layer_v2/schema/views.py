@@ -1,7 +1,6 @@
 import polars as pl
 
-from silverfund.data_access_layer_v2.schema.tables import (assets_table, crsp_daily_table,
-                                                           crsp_events_table, crsp_monthly_table)
+from silverfund.data_access_layer_v2.schema.tables import assets_table, crsp_daily_table, crsp_events_table, crsp_monthly_table
 
 russell_rebalance_dates = (
     assets_table.scan()
@@ -22,19 +21,11 @@ in_universe_assets = (
     # Join rebalance dates
     .join(russell_rebalance_dates, on="date", how="left")
     # Fill nulls with false on rebalance dates
-    .with_columns(
-        pl.when(pl.col("russell_rebalance")).then(
-            pl.col("russell_1000", "russell_2000").fill_null(False)
-        )
-    )
+    .with_columns(pl.when(pl.col("russell_rebalance")).then(pl.col("russell_1000", "russell_2000").fill_null(False)))
     # Sort before forward fill
     .sort(["barrid", "date"])
     # Forward fill
-    .with_columns(
-        pl.col("ticker", "russell_1000", "russell_2000")
-        .fill_null(strategy="forward")
-        .over("barrid")
-    )
+    .with_columns(pl.col("ticker", "russell_1000", "russell_2000").fill_null(strategy="forward").over("barrid"))
     # Russell constituency filter
     .filter(pl.col("russell_1000") | pl.col("russell_2000"))
     # Drop russell_rebalance column
@@ -83,4 +74,11 @@ crsp_daily_clean = (
     .with_columns(pl.col("prc").abs())
     .filter(~pl.col("ret").is_in([-66.0, -77.0, -88.0, -99.0]))
     .sort(["permno", "date"])
+)
+
+
+benchmark = in_universe_assets.select(
+    "date",
+    "barrid",
+    pl.col("market_cap").truediv(pl.col("market_cap").sum()).over("date").alias("weight"),
 )
