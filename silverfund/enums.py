@@ -14,3 +14,9 @@ class Compounding(Enum):
 class Turnover(Enum):
     ABSOLUTE = "absolute"
     RELATIVE = "relative"
+
+
+class FactorGroup(Enum):
+    RISK = "risk"
+    INDUSTRY = "industry"
+    ALL = "all"
